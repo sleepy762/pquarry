@@ -9,9 +9,12 @@ bool callback(const PDU& pdu)
     // Stores a list of the protocols in the PDU in order
     std::list<PDU::PDUType> protocols;
 
-    // Print packet serial number
-    std::cout << packetNumber << "\t";
+    // Holds the packet output line
+    std::stringstream ss;
+    // Packet serial number
+    ss << packetNumber << "\t";
 
+    std::string altProtocolName = "";
     PDU* originalPDU = pdu.clone();
     // Gather data from all the protocols in the list of PDUs
     PDU* inner = originalPDU;
@@ -20,7 +23,7 @@ bool callback(const PDU& pdu)
         PDU::PDUType innerType = inner->pdu_type();
         PDU* nextInnerPDU = inner->inner_pdu();
 
-        PacketPrinter::protocol_switch(innerType, inner, nextInnerPDU);
+        altProtocolName = PacketPrinter::protocol_switch(innerType, inner, nextInnerPDU, ss);
 
         // Store the sequence of protocols
         if (innerType != pdu.RAW)
@@ -31,7 +34,20 @@ bool callback(const PDU& pdu)
         // Advance the pdu list
         inner = nextInnerPDU;
     }
-    std::cout << originalPDU->size() << "\t" << Utils::to_string(protocols.back()) << std::endl;
+    ss << originalPDU->size() << "\t";
+
+    // Append alternative protocol name, if it exists
+    if (altProtocolName != "")
+    {
+        ss << altProtocolName << '(' << Utils::to_string(protocols.back()) << ')';
+    }
+    else
+    {
+        ss << Utils::to_string(protocols.back());
+    }
+
+    // Output the entire packet string stream
+    std::cout << ss.str() << '\n';
 
     savedPDUs.push_back(originalPDU);
     packetNumber++;

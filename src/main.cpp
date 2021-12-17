@@ -8,6 +8,7 @@ int main(int argc, char* argv[])
         std::cerr << "This program must be run as root in order to work." << std::endl;
         return 1;
     }
+    // Call menu here
     if (argc != 2)
     {
         std::cout << "Usage: " << *argv << " <interface>" << std::endl;
