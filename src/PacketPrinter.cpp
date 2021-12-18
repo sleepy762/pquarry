@@ -70,7 +70,18 @@ void PacketPrinter::type_ieee802_3(PDU* pdu, std::stringstream& ss)
     }
     
     IEEE802_3* ieee802_3 = pdu->find_pdu<IEEE802_3>();
-    ss << ieee802_3->src_addr() << "->" << ieee802_3->dst_addr() << "\t";
+
+    ss << ieee802_3->src_addr() << "->";
+    // Print 'Broadcast' instead of the broadcast address
+    if (ieee802_3->dst_addr() == ieee802_3->BROADCAST)
+    {
+        ss << "Broadcast";
+    }
+    else
+    {
+        ss << ieee802_3->dst_addr();
+    }
+    ss << "\t";
 }
 
 void PacketPrinter::type_ethernet2(PDU* pdu, std::stringstream& ss, std::string& altProtocolName)
@@ -84,7 +95,18 @@ void PacketPrinter::type_ethernet2(PDU* pdu, std::stringstream& ss, std::string&
     EthernetII* eth2 = pdu->find_pdu<EthernetII>();
     // Determine packet type
     altProtocolName = std::string(ProtocolDeterminer::eth2_type_string(eth2->payload_type()));
-    ss << eth2->src_addr() << "->" << eth2->dst_addr() << "\t";
+
+    ss << eth2->src_addr() << "->";
+    // Print 'Broadcast' instead of the broadcast address
+    if (eth2->dst_addr() == eth2->BROADCAST)
+    {
+        ss << "Broadcast";
+    }
+    else
+    {
+        ss << eth2->dst_addr();
+    }
+    ss << "\t";
 }
 
 void PacketPrinter::type_llc(PDU* pdu, std::stringstream& ss, std::string& altProtocolName)
