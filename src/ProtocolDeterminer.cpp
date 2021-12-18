@@ -51,7 +51,8 @@ const std::map<uint16_t, const char*> ProtocolDeterminer::_port_protocols =
     { 443, "HTTPS" },
     { 989, "FTPS" },
     { 990, "FTPS" },
-    { 3389, "RDP" }
+    { 3389, "RDP" },
+    { 5353, "MDNS" }
 };
 
 
@@ -77,4 +78,10 @@ const char* ProtocolDeterminer::port_protocol_string(uint16_t port)
 {
     auto portProto = ProtocolDeterminer::_port_protocols.find(port);
     return portProto != ProtocolDeterminer::_port_protocols.end() ? portProto->second : "";
+}
+
+bool ProtocolDeterminer::check_if_alt_protocol_exists(uint16_t port)
+{
+    return (ProtocolDeterminer::_port_protocols.find(port) != ProtocolDeterminer::_port_protocols.end()) ?
+        true : false;
 }

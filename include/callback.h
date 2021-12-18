@@ -4,6 +4,7 @@
 #include <list>
 #include <chrono>
 #include "PacketPrinter.h"
+#include "ColorPicker.h"
 
 using namespace Tins;
 

@@ -16,4 +16,5 @@ public:
     static const char* eth2_type_string(uint16_t type);
     static const char* ip_protocol_string(uint8_t protocol);
     static const char* port_protocol_string(uint16_t port);
+    static bool check_if_alt_protocol_exists(uint16_t port);
 };
