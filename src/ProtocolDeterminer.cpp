@@ -1,87 +1,92 @@
 #include "ProtocolDeterminer.h"
 
-const std::map<uint8_t, const char*> ProtocolDeterminer::_llc_mod_funcs = 
+const protocol_properties NULL_PROPERTIES = { nullptr, nullptr };
+
+// The maps contain some identifier as the key, the value is the 'protocol_properties' struct
+// which contains a string for the protocol name, and another string for the ANSI color string
+// 'nullptr' in the color field means that the default color of the layer will be used (see the ColorPicker class)
+
+const std::map<uint16_t, protocol_properties> ProtocolDeterminer::_eth2_types =
 {
-    { LLC::ModifierFunctions::UI, "UI" },
-    { LLC::ModifierFunctions::DISC, "DISC" },
-    { LLC::ModifierFunctions::UA, "UA" },
-    { LLC::ModifierFunctions::TEST, "TEST" },
-    { LLC::ModifierFunctions::FRMR, "FRMR" },
-    { LLC::ModifierFunctions::DM, "DM" },
-    { LLC::ModifierFunctions::XID, "XID" },
-    { LLC::ModifierFunctions::SABME, "SABME" }
+    { 0x88cc, { "LLDP", nullptr } }
 };
 
-const std::map<uint16_t, const char*> ProtocolDeterminer::_eth2_types =
+const std::map<uint16_t, protocol_properties> ProtocolDeterminer::_ip_protocols = 
 {
-    { 0x88cc, "LLDP" },
-    { 0x893a, "ieee1905" }
-};
-
-const std::map<uint8_t, const char*> ProtocolDeterminer::_ip_protocols = 
-{
-    { 0x02, "IGMP" }
+    { 0x02, { "IGMP", nullptr } }
 };
 
 // This includes both UDP and TCP ports, which may cause incorrect determinations
-const std::map<uint16_t, const char*> ProtocolDeterminer::_port_protocols =
+const std::map<uint16_t, protocol_properties> ProtocolDeterminer::_port_protocols =
 {
-    { 20, "FTP" },
-    { 21, "FTP" },
-    { 22, "SSH" },
-    { 23, "Telnet" },
-    { 25, "SMTP" },
-    { 50, "IPSec" },
-    { 51, "IPSec" },
-    { 53, "DNS" },
-    { 67, "DHCP" },
-    { 68, "DHCP" },
-    { 69, "TFTP" },
-    { 80, "HTTP" },
-    { 110, "POP3" },
-    { 119, "NNTP" },
-    { 123, "NTP" },
-    { 137, "NBNS" },
-    { 138, "NBDS" },
-    { 139, "NBSS" },
-    { 143, "IMAP4" },
-    { 161, "SNMP" },
-    { 162, "SNMP" },
-    { 389, "LDAP" },
-    { 443, "HTTPS" },
-    { 989, "FTPS" },
-    { 990, "FTPS" },
-    { 3389, "RDP" },
-    { 5353, "MDNS" }
+    { 20, { "FTP", ANSI_RGB(255,179,222) } },
+    { 21, { "FTP", ANSI_RGB(255,179,222) } },
+    { 22, { "SSH", ANSI_RGB(0,255,255) } },
+    { 23, { "Telnet", ANSI_RGB(155,255,0) } },
+    { 25, { "SMTP", DEFAULT_COLOR } },
+    { 50, { "IPSec", DEFAULT_COLOR } },
+    { 51, { "IPSec", DEFAULT_COLOR } },
+    { 53, { "DNS", ANSI_RGB(0,255,174) } },
+    { 67, { "DHCP", ANSI_RGB(255,157,0) } },
+    { 68, { "DHCP", ANSI_RGB(255,157,0) } },
+    { 69, { "TFTP", ANSI_RGB(255,179,222) } },
+    { 80, { "HTTP", ANSI_RGB(135,255,135) } },
+    { 110, { "POP3", DEFAULT_COLOR } },
+    { 119, { "NNTP", DEFAULT_COLOR } },
+    { 123, { "NTP", DEFAULT_COLOR } },
+    { 137, { "NBNS", ANSI_RGB(255,255,0) } },
+    { 138, { "NBDS", ANSI_RGB(255,255,0) } },
+    { 139, { "NBSS", ANSI_RGB(255,255,0) } },
+    { 143, { "IMAP4", DEFAULT_COLOR } },
+    { 161, { "SNMP", DEFAULT_COLOR } },
+    { 162, { "SNMP", DEFAULT_COLOR } },
+    { 389, { "LDAP", DEFAULT_COLOR } },
+    { 443, { "HTTPS", ANSI_RGB(209,184,255) } },
+    { 989, { "FTPS", ANSI_RGB(209,184,255) } },
+    { 990, { "FTPS", ANSI_RGB(209,184,255) } },
+    { 3389, { "RDP", DEFAULT_COLOR } },
+    { 5353, { "MDNS", ANSI_RGB(0,255,174) } }
 };
 
 
-const char* ProtocolDeterminer::llc_modifier_func_string(uint8_t modfunc)
+// This function may be called only when a protocol wants to modify both the color and alternate protocol name
+// Otherwise, its enough to only get the color with ColorPicker
+protocol_properties ProtocolDeterminer::get_protocol_properties_by_type(PDU::PDUType type, uint16_t id)
 {
-    auto funcStr = ProtocolDeterminer::_llc_mod_funcs.find(modfunc);
-    return funcStr != ProtocolDeterminer::_llc_mod_funcs.end() ? funcStr->second : "";
+    std::map<uint16_t, protocol_properties> chosenMap;
+
+    switch (type)
+    {
+    case PDU::PDUType::ETHERNET_II:
+        chosenMap = _eth2_types;
+        break;
+
+    case PDU::PDUType::IP:
+        chosenMap = _ip_protocols;
+        break;
+    
+    default:
+        return NULL_PROPERTIES;
+    }
+
+    auto typeIterator = chosenMap.find(type);
+    return (typeIterator != chosenMap.end()) ? typeIterator->second : NULL_PROPERTIES;
 }
 
-const char* ProtocolDeterminer::eth2_type_string(uint16_t type)
+bool ProtocolDeterminer::does_alt_protocol_exist_for_port(uint16_t port)
 {
-    auto eth2Type = ProtocolDeterminer::_eth2_types.find(type);
-    return eth2Type != ProtocolDeterminer::_eth2_types.end() ? eth2Type->second : "";
+    return (_port_protocols.find(port) != _port_protocols.end());
 }
 
-const char* ProtocolDeterminer::ip_protocol_string(uint8_t protocol)
+protocol_properties ProtocolDeterminer::get_protocol_properties_by_ports(uint16_t sport, uint16_t dport)
 {
-    auto ipProto = ProtocolDeterminer::_ip_protocols.find(protocol);
-    return ipProto != ProtocolDeterminer::_ip_protocols.end() ? ipProto->second : "";
-}
-
-const char* ProtocolDeterminer::port_protocol_string(uint16_t port)
-{
-    auto portProto = ProtocolDeterminer::_port_protocols.find(port);
-    return portProto != ProtocolDeterminer::_port_protocols.end() ? portProto->second : "";
-}
-
-bool ProtocolDeterminer::check_if_alt_protocol_exists(uint16_t port)
-{
-    return (ProtocolDeterminer::_port_protocols.find(port) != ProtocolDeterminer::_port_protocols.end()) ?
-        true : false;
+    if (does_alt_protocol_exist_for_port(sport))
+    {
+        return _port_protocols.find(sport)->second;
+    }
+    else if (does_alt_protocol_exist_for_port(dport))
+    {
+        return _port_protocols.find(dport)->second;
+    }
+    return NULL_PROPERTIES;
 }

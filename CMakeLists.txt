@@ -13,7 +13,7 @@ add_executable(${PROJECT_NAME} ${coresrc})
 # Specify the C++ Standard and flags
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -pedantic -Wno-unused-variable -Wno-unused-parameter -Wno-unused-value")
 set(CMAKE_EXE_LINKER_FLAGS "-ltins") # Link with libtins
 
 # Include headers

@@ -14,8 +14,7 @@ bool callback(const PDU& pdu)
     // Packet serial number
     ss << packetNumber << "\t";
 
-    std::string altProtocolName = "";
-    const char* colorPtr = nullptr;
+    protocol_properties properties;
 
     PDU* originalPDU = pdu.clone();
     // Gather data from all the protocols in the list of PDUs
@@ -23,24 +22,23 @@ bool callback(const PDU& pdu)
     while (inner != nullptr)
     {
         PDU::PDUType innerType = inner->pdu_type();
-        PDU* nextInnerPDU = inner->inner_pdu();
 
         // Store the sequence of protocols
         if (innerType != pdu.RAW)
         {
-            colorPtr = PacketPrinter::protocol_switch(innerType, inner, nextInnerPDU, ss, altProtocolName);
+            properties = PacketPrinter::get_protocol_properties(innerType, inner, ss);
             protocols.push_back(innerType);
         }
 
         // Advance the pdu list
-        inner = nextInnerPDU;
+        inner = inner->inner_pdu();
     }
     ss << originalPDU->size() << "\t";
 
     // Append alternative protocol name, if it exists
-    if (altProtocolName != "")
+    if (properties.protocolString != nullptr)
     {
-        ss << altProtocolName << '(' << Utils::to_string(protocols.back()) << ')';
+        ss << properties.protocolString << '(' << Utils::to_string(protocols.back()) << ')';
     }
     else
     {
@@ -48,7 +46,7 @@ bool callback(const PDU& pdu)
     }
 
     // Output the entire packet string stream
-    std::cout << colorPtr << ss.str() << RESET_COLOR << '\n';
+    std::cout << properties.protocolColor << ss.str() << RESET_COLOR << '\n';
 
     savedPDUs.push_back(originalPDU);
     packetNumber++;
