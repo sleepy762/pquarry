@@ -19,10 +19,6 @@ protocol_properties PacketPrinter::get_protocol_properties(PDU::PDUType currPDUT
             currPDU->find_pdu<EthernetII>()->payload_type());
         break;
 
-    case currPDU->LLC:
-        PacketPrinter::edit_ss_llc(currPDU, ss);
-        break;
-
     case currPDU->IP:
         PacketPrinter::edit_ss_ip(currPDU, ss);
         properties = ProtocolDeterminer::get_protocol_properties_by_type(currPDU->pdu_type(), 
@@ -31,18 +27,6 @@ protocol_properties PacketPrinter::get_protocol_properties(PDU::PDUType currPDUT
 
     case currPDU->IPv6:
         PacketPrinter::edit_ss_ipv6(currPDU, ss);
-        break;
-
-    case currPDU->ARP:
-        PacketPrinter::edit_ss_arp(currPDU, ss);
-        break;
-
-    case currPDU->ICMP:
-        PacketPrinter::edit_ss_icmp(currPDU, ss);
-        break;
-
-    case currPDU->ICMPv6:
-        PacketPrinter::edit_ss_icmpv6(currPDU, ss);
         break;
 
     case currPDU->TCP:
@@ -120,13 +104,6 @@ void PacketPrinter::edit_ss_ethernet2(PDU* pdu, std::stringstream& ss)
     ss << "\t\t";
 }
 
-void PacketPrinter::edit_ss_llc(PDU* pdu, std::stringstream& ss)
-{
-    LLC* llc = pdu->find_pdu<LLC>();
-    // maybe add something to the string stream
-    (void*)llc;
-}
-
 void PacketPrinter::edit_ss_ip(PDU* pdu, std::stringstream& ss)
 {
     IP* ip = pdu->find_pdu<IP>();
@@ -137,26 +114,6 @@ void PacketPrinter::edit_ss_ipv6(PDU* pdu, std::stringstream& ss)
 {
     IPv6* ipv6 = pdu->find_pdu<IPv6>();
     ss << ipv6->src_addr() << "->" << ipv6->dst_addr() << "\t";
-}
-
-void PacketPrinter::edit_ss_arp(PDU* pdu, std::stringstream& ss)
-{
-    ARP* arp = pdu->find_pdu<ARP>();
-    // maybe add some arp info
-    (void*)arp;
-}
-
-void PacketPrinter::edit_ss_icmp(PDU* pdu, std::stringstream& ss)
-{
-    ICMP* icmp = pdu->find_pdu<ICMP>();
-    ss << "\t\t";
-}
-
-void PacketPrinter::edit_ss_icmpv6(PDU* pdu, std::stringstream& ss)
-{
-    ICMPv6* icmpv6 = pdu->find_pdu<ICMPv6>();
-    // maybe add some info
-    (void*)icmpv6;
 }
 
 void PacketPrinter::edit_ss_tcp(PDU* pdu, std::stringstream& ss)

@@ -9,14 +9,11 @@ using namespace Tins;
 
 class PacketPrinter
 {
+    // Only the relevant protocols are here
     static void edit_ss_ieee802_3(PDU* pdu, std::stringstream& ss);
     static void edit_ss_ethernet2(PDU* pdu, std::stringstream& ss);
-    static void edit_ss_llc(PDU* pdu, std::stringstream& ss);
     static void edit_ss_ip(PDU* pdu, std::stringstream& ss);
     static void edit_ss_ipv6(PDU* pdu, std::stringstream& ss);
-    static void edit_ss_arp(PDU* pdu, std::stringstream& ss);
-    static void edit_ss_icmp(PDU* pdu, std::stringstream& ss);
-    static void edit_ss_icmpv6(PDU* pdu, std::stringstream& ss);
     static void edit_ss_tcp(PDU* pdu, std::stringstream& ss);
     static void edit_ss_udp(PDU* pdu, std::stringstream& ss);
 
