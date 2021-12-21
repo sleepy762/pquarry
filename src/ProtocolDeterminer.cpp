@@ -13,7 +13,7 @@ const std::map<uint16_t, protocol_properties> ProtocolDeterminer::_eth2_types =
 
 const std::map<uint16_t, protocol_properties> ProtocolDeterminer::_ip_protocols = 
 {
-    { 0x02, { "IGMP", nullptr } }
+    { 0x0002, { "IGMP", nullptr } }
 };
 
 // This includes both UDP and TCP ports, which may cause incorrect determinations
@@ -44,6 +44,7 @@ const std::map<uint16_t, protocol_properties> ProtocolDeterminer::_port_protocol
     { 443, { "HTTPS", ANSI_RGB(209,184,255) } },
     { 989, { "FTPS", ANSI_RGB(209,184,255) } },
     { 990, { "FTPS", ANSI_RGB(209,184,255) } },
+    { 1900, { "SSDP", nullptr } },
     { 3389, { "RDP", DEFAULT_COLOR } },
     { 5353, { "MDNS", ANSI_RGB(0,255,174) } }
 };
@@ -51,7 +52,7 @@ const std::map<uint16_t, protocol_properties> ProtocolDeterminer::_port_protocol
 
 // This function may be called only when a protocol wants to modify both the color and alternate protocol name
 // Otherwise, its enough to only get the color with ColorPicker
-protocol_properties ProtocolDeterminer::get_protocol_properties_by_type(PDU::PDUType type, uint16_t id)
+protocol_properties ProtocolDeterminer::get_protocol_properties_by_type(const PDU::PDUType type, const uint16_t id)
 {
     std::map<uint16_t, protocol_properties> chosenMap;
 
@@ -69,16 +70,16 @@ protocol_properties ProtocolDeterminer::get_protocol_properties_by_type(PDU::PDU
         return NULL_PROPERTIES;
     }
 
-    auto typeIterator = chosenMap.find(type);
+    const auto typeIterator = chosenMap.find(id);
     return (typeIterator != chosenMap.end()) ? typeIterator->second : NULL_PROPERTIES;
 }
 
-bool ProtocolDeterminer::does_alt_protocol_exist_for_port(uint16_t port)
+bool ProtocolDeterminer::does_alt_protocol_exist_for_port(const uint16_t port)
 {
     return (_port_protocols.find(port) != _port_protocols.end());
 }
 
-protocol_properties ProtocolDeterminer::get_protocol_properties_by_ports(uint16_t sport, uint16_t dport)
+protocol_properties ProtocolDeterminer::get_protocol_properties_by_ports(const uint16_t sport, const uint16_t dport)
 {
     if (does_alt_protocol_exist_for_port(sport))
     {

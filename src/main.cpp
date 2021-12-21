@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[])
 {
-    if (getuid() != 0)
+    if (geteuid() != 0)
     {
         std::cerr << "This program must be run as root in order to work." << std::endl;
         return 1;

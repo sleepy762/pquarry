@@ -20,8 +20,8 @@ class ProtocolDeterminer
     static const std::map<uint16_t, protocol_properties> _port_protocols;
 
 public:
-    static protocol_properties get_protocol_properties_by_type(PDU::PDUType type, uint16_t id);
+    static protocol_properties get_protocol_properties_by_type(const PDU::PDUType type, const uint16_t id);
 
-    static bool does_alt_protocol_exist_for_port(uint16_t port);
-    static protocol_properties get_protocol_properties_by_ports(uint16_t sport, uint16_t dport);
+    static bool does_alt_protocol_exist_for_port(const uint16_t port);
+    static protocol_properties get_protocol_properties_by_ports(const uint16_t sport, const uint16_t dport);
 };
