@@ -1,6 +1,7 @@
 #include "Netscout.h"
 
-std::list<PDU*> _savedPDUs;
+std::list<PDU*> Netscout::_savedPDUs;
+Sniffer* Netscout::_sniffer = nullptr;
 
 Netscout::Netscout() 
 {
@@ -59,21 +60,47 @@ bool Netscout::callback(const PDU& pdu)
     // Output the entire packet string stream
     std::cout << properties.protocolColor << ss.str() << RESET_COLOR << '\n';
 
-    _savedPDUs.push_back(originalPDU);
+    Netscout::_savedPDUs.push_back(originalPDU);
     packetNumber++;
     return true;
 }
 
-void Netscout::start_sniffer() const
+// Stops the sniffer when Ctrl-C is pressed
+void Netscout::sniffer_interrupt(int)
 {
+    if (Netscout::_sniffer != nullptr)
+    {
+        Netscout::_sniffer->stop_sniff();
+
+        delete Netscout::_sniffer;
+        Netscout::_sniffer = nullptr;
+    }
+    // We want to disable the signal handler when we are not sniffing
+    signal(SIGINT, SIG_DFL);
+}
+
+void Netscout::start_sniffer()
+{
+    // Failsafe
+    if (Netscout::_sniffer != nullptr)
+    {
+        delete Netscout::_sniffer;
+    }
+
     try
     {
-        Sniffer(this->_interface).sniff_loop(callback);
+        Netscout::_sniffer = new Sniffer(this->_interface);
+        // We want the signal handler to work only while sniffing
+        signal(SIGINT, Netscout::sniffer_interrupt);
+
+        Netscout::_sniffer->sniff_loop(Netscout::callback);
     }
     catch(const std::exception& e)
     {
         NetscoutMenu::print_error_msg(e.what());
     }
+
+    std::cout << '\n' << "Sniffed " << Netscout::_savedPDUs.size() << " packets so far." << '\n'; 
 }
 
 void Netscout::menu_loop()

@@ -3,20 +3,23 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <signal.h>
 #include "PacketPrinter.h"
 #include "ColorPicker.h"
 #include "NetscoutMenu.h"
 
 using namespace Tins;
 
-extern std::list<PDU*> _savedPDUs;
-
 class Netscout
 {
     std::string _interface;
     std::string _filters;
 
+    static Sniffer* _sniffer;
+    static std::list<PDU*> _savedPDUs;
+
     static bool callback(const PDU& pdu);
+    static void sniffer_interrupt(int);
 
 public:
     Netscout();
@@ -30,5 +33,5 @@ public:
 
     void menu_loop();
 
-    void start_sniffer() const;
+    void start_sniffer();
 };

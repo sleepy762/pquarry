@@ -34,7 +34,7 @@ int NetscoutMenu::get_int()
 
 void NetscoutMenu::main_menu()
 {
-    std::cout << "\nNetScout Version " << VERSION << '\n';
+    std::cout << '\n' << "NetScout Version " << VERSION << '\n';
     std::cout << "[1] Start sniffer" << '\n';
     std::cout << "[2] Set interface" << '\n';
     std::cout << "[3] Set filters (manually)" << '\n';
