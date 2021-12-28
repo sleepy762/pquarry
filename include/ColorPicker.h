@@ -7,6 +7,9 @@
 
 #define DEFAULT_COLOR (ANSI_RGB(255,255,255))
 
+#define ERROR_COLOR (ANSI_RGB(217,35,35))
+#define SUCCESS_COLOR (ANSI_RGB(35,217,83))
+
 using namespace Tins;
 
 class ColorPicker

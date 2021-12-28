@@ -10,7 +10,7 @@ Netscout::Netscout()
 
 Netscout::~Netscout() 
 {
-
+    // Free savedPDUs
 }
 
 bool Netscout::callback(const PDU& pdu)
@@ -72,7 +72,7 @@ void Netscout::start_sniffer() const
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        NetscoutMenu::print_error_msg(e.what());
     }
 }
 
@@ -102,7 +102,7 @@ void Netscout::menu_loop()
             std::getline(std::cin, newInterface);
             this->set_interface(newInterface);
 
-            std::cout << "New interface has been set." << '\n';
+            NetscoutMenu::print_success_msg("New interface has been set.");
             break;
         }
 
@@ -116,7 +116,7 @@ void Netscout::menu_loop()
             std::getline(std::cin, newFilters);
             this->set_filters(newFilters);
 
-            std::cout << "New filters have been set." << '\n';
+            NetscoutMenu::print_success_msg("New filters have been set.");
             break;
         }
 
@@ -124,7 +124,7 @@ void Netscout::menu_loop()
             break;
 
         default:
-            std::cerr << "Invalid option." << '\n';
+            NetscoutMenu::print_error_msg("Invalid option.");
             break;
         }
     } while (choice != EXIT_OPT);
