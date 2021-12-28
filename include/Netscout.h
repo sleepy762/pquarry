@@ -15,6 +15,7 @@ class Netscout
     std::string _interface;
     std::string _filters;
 
+    // These static members are members which are used by the static functions below
     static Sniffer* _sniffer;
     static std::list<PDU*> _savedPDUs;
     static unsigned int _packet_number;
@@ -27,11 +28,15 @@ public:
     ~Netscout();
 
     std::string get_interface() const;
+    // Setter
     void set_interface(std::string interface);
+    // Gets the interface from the user and then sets it with the above setter
     void set_interface();
 
     std::string get_filters() const;
+    // Setter
     void set_filters(std::string filters);
+    // Gets the filters from the user and then sets them with the above setter
     void set_filters();
 
     void menu_loop();

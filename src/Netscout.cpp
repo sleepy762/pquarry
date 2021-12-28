@@ -12,6 +12,7 @@ Netscout::Netscout()
 
 Netscout::~Netscout() 
 {
+    // Free all dynamically allocated memory
     this->clear_saved_packets();
 }
 
@@ -89,21 +90,24 @@ void Netscout::start_sniffer()
     std::cout << "Starting sniffer on interface " << this->get_interface() << '\n';
     try
     {
+        // Instantiate the config to add our pcap filters
         SnifferConfiguration config;
         config.set_filter(this->get_filters());
 
+        // The sniffer is allocated on the heap because we want to access the object in a separate function
+        // see Netscout::sniffer_interrupt
         _sniffer = new Sniffer(this->_interface, config);
 
         // We want the signal handler to work only while sniffing
         signal(SIGINT, Netscout::sniffer_interrupt);
 
+        // Starts the sniffer
         _sniffer->sniff_loop(callback);
     }
     catch(const std::exception& e)
     {
         NetscoutMenu::print_error_msg(e.what());
     }
-
     std::cout << '\n' << "Sniffed " << _savedPDUs.size() << " packets so far." << '\n';
 }
 
@@ -155,6 +159,7 @@ void Netscout::clear_saved_packets()
 {
     int amountOfPackets = _savedPDUs.size();
 
+    // the PDUs were allocated on the heap and it's our responsibility to delete them
     for (auto it = _savedPDUs.begin(); it != _savedPDUs.end(); it++)
     {
         delete *it;
@@ -186,6 +191,7 @@ void Netscout::export_packets() const
 
     filename += ".pcap";
 
+    // Writes the packets into a pcap file
     PacketWriter writer(filename, DataLinkType<EthernetII>());
     writer.write(_savedPDUs.cbegin(), _savedPDUs.cend());
 
