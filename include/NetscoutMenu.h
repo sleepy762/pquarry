@@ -1,18 +1,27 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <map>
 #include <limits>
 #include "ColorPicker.h"
 
-#define VERSION ("1.0")
+#define VERSION ("1.1")
 
-#define START_SNIFFER_OPT (1)
-#define SET_INTERFACE_OPT (2)
-#define SET_FILTERS_OPT (3)
-#define EXIT_OPT (4)
+enum menu_entry_index
+{
+    START_SNIFFER_OPT = 1,
+    SET_INTERFACE_OPT,
+    SET_FILTERS_OPT,
+    EXPORT_PACKETS_OPT,
+    CLEAR_SAVED_PACKETS_OPT,
+    SEE_INFO_OPT,
+    EXIT_OPT
+};
 
 class NetscoutMenu
 {
+    static const std::map<int, const char*> _main_menu_entries;
+
 public:
     static void main_menu();
     static int get_int();

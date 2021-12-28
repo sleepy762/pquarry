@@ -1,5 +1,16 @@
 #include "NetscoutMenu.h"
 
+const std::map<int, const char*> NetscoutMenu::_main_menu_entries = 
+{
+    { START_SNIFFER_OPT, "Start sniffer" },
+    { SET_INTERFACE_OPT, "Set interface" },
+    { SET_FILTERS_OPT, "Set pcap filters" },
+    { EXPORT_PACKETS_OPT, "Export packets into pcap" },
+    { CLEAR_SAVED_PACKETS_OPT, "Clear saved packets"},
+    { SEE_INFO_OPT, "See information" },
+    { EXIT_OPT, "Exit" }
+};
+
 void NetscoutMenu::print_success_msg(const char* msg)
 {
     std::cout << SUCCESS_COLOR << msg << RESET_COLOR << '\n';
@@ -35,9 +46,9 @@ int NetscoutMenu::get_int()
 void NetscoutMenu::main_menu()
 {
     std::cout << '\n' << "NetScout Version " << VERSION << '\n';
-    std::cout << "[1] Start sniffer" << '\n';
-    std::cout << "[2] Set interface" << '\n';
-    std::cout << "[3] Set filters (manually)" << '\n';
-    std::cout << "[4] Exit" << '\n';
-    std::cout << "Select an option please: "; 
+    for (auto it = _main_menu_entries.cbegin(); it != _main_menu_entries.cend(); it++)
+    {
+        std::cout << '[' << it->first << ']' << ' ' << it->second << '\n';
+    }
+    std::cout << "Select an option please: ";
 }

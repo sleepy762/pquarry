@@ -2,6 +2,7 @@
 
 std::list<PDU*> Netscout::_savedPDUs;
 Sniffer* Netscout::_sniffer = nullptr;
+unsigned int Netscout::_packet_number = 1;
 
 Netscout::Netscout() 
 {
@@ -11,20 +12,18 @@ Netscout::Netscout()
 
 Netscout::~Netscout() 
 {
-    // Free savedPDUs
+    this->clear_saved_packets();
 }
 
 bool Netscout::callback(const PDU& pdu)
 {
-    // Initial packet number
-    static int packetNumber = 1;
     // Stores a list of the protocols in the PDU in order
     std::list<PDU::PDUType> protocols;
 
     // Holds the packet output line
     std::stringstream ss;
     // Packet serial number
-    ss << packetNumber << "\t";
+    ss << _packet_number << "\t";
 
     protocol_properties properties;
 
@@ -60,20 +59,20 @@ bool Netscout::callback(const PDU& pdu)
     // Output the entire packet string stream
     std::cout << properties.protocolColor << ss.str() << RESET_COLOR << '\n';
 
-    Netscout::_savedPDUs.push_back(originalPDU);
-    packetNumber++;
+    _savedPDUs.push_back(originalPDU);
+    _packet_number++;
     return true;
 }
 
 // Stops the sniffer when Ctrl-C is pressed
 void Netscout::sniffer_interrupt(int)
 {
-    if (Netscout::_sniffer != nullptr)
+    if (_sniffer != nullptr)
     {
-        Netscout::_sniffer->stop_sniff();
+        _sniffer->stop_sniff();
 
-        delete Netscout::_sniffer;
-        Netscout::_sniffer = nullptr;
+        delete _sniffer;
+        _sniffer = nullptr;
     }
     // We want to disable the signal handler when we are not sniffing
     signal(SIGINT, SIG_DFL);
@@ -82,31 +81,35 @@ void Netscout::sniffer_interrupt(int)
 void Netscout::start_sniffer()
 {
     // Failsafe
-    if (Netscout::_sniffer != nullptr)
+    if (_sniffer != nullptr)
     {
-        delete Netscout::_sniffer;
+        delete _sniffer;
     }
 
+    std::cout << "Starting sniffer on interface " << this->get_interface() << '\n';
     try
     {
-        Netscout::_sniffer = new Sniffer(this->_interface);
+        SnifferConfiguration config;
+        config.set_filter(this->get_filters());
+
+        _sniffer = new Sniffer(this->_interface, config);
+
         // We want the signal handler to work only while sniffing
         signal(SIGINT, Netscout::sniffer_interrupt);
 
-        Netscout::_sniffer->sniff_loop(Netscout::callback);
+        _sniffer->sniff_loop(callback);
     }
     catch(const std::exception& e)
     {
         NetscoutMenu::print_error_msg(e.what());
     }
 
-    std::cout << '\n' << "Sniffed " << Netscout::_savedPDUs.size() << " packets so far." << '\n'; 
+    std::cout << '\n' << "Sniffed " << _savedPDUs.size() << " packets so far." << '\n';
 }
 
 void Netscout::menu_loop()
 {
     int choice;
-
     do
     {
         NetscoutMenu::main_menu();
@@ -115,38 +118,29 @@ void Netscout::menu_loop()
         switch (choice)
         {
         case START_SNIFFER_OPT:
-            std::cout << "Starting sniffer on interface " << this->_interface << '\n';
             this->start_sniffer();
             break;
 
         case SET_INTERFACE_OPT:
-        {
-            std::string newInterface;
-
-            std::cout << "Current interface: " << this->_interface << '\n';
-            std::cout << "Enter interface: ";
-
-            std::getline(std::cin, newInterface);
-            this->set_interface(newInterface);
-
-            NetscoutMenu::print_success_msg("New interface has been set.");
+            this->set_interface();
             break;
-        }
 
         case SET_FILTERS_OPT:
-        {
-            std::string newFilters;
-
-            std::cout << "Current filters: " << this->get_filters() << '\n';
-            std::cout << "Enter filters: "; // Temporary, there will be an interactive menu
-
-            std::getline(std::cin, newFilters);
-            this->set_filters(newFilters);
-
-            NetscoutMenu::print_success_msg("New filters have been set.");
+            this->set_filters();
             break;
-        }
 
+        case EXPORT_PACKETS_OPT:
+            this->export_packets();
+            break;
+
+        case CLEAR_SAVED_PACKETS_OPT:
+            this->clear_saved_packets();
+            break;
+
+        case SEE_INFO_OPT:
+            this->see_information();
+            break;
+    
         case EXIT_OPT:
             break;
 
@@ -157,9 +151,72 @@ void Netscout::menu_loop()
     } while (choice != EXIT_OPT);
 }
 
+void Netscout::clear_saved_packets()
+{
+    int amountOfPackets = _savedPDUs.size();
+
+    for (auto it = _savedPDUs.begin(); it != _savedPDUs.end(); it++)
+    {
+        delete *it;
+    }
+    _savedPDUs.clear();
+    _packet_number = 1;
+
+    const std::string msg = std::to_string(amountOfPackets) + " saved packets were cleared.";
+    NetscoutMenu::print_success_msg(msg.c_str());
+}
+
+void Netscout::export_packets() const
+{
+    if (_savedPDUs.size() == 0)
+    {
+        NetscoutMenu::print_error_msg("There are no saved packets.");
+        return;
+    }
+
+    std::string filename = "";
+    std::cout << "Enter pcap filename(or full path): ";
+    std::getline(std::cin, filename);
+
+    if (filename == "")
+    {
+        NetscoutMenu::print_error_msg("Aborting export because filename is empty.");
+        return;
+    }
+
+    filename += ".pcap";
+
+    PacketWriter writer(filename, DataLinkType<EthernetII>());
+    writer.write(_savedPDUs.cbegin(), _savedPDUs.cend());
+
+    const std::string msg = std::to_string(_savedPDUs.size()) + " packets were written to " + filename;
+    NetscoutMenu::print_success_msg(msg.c_str());
+}
+
+void Netscout::see_information() const
+{
+    std::cout << '\n' << "== Information ==" << '\n';
+    std::cout << "Interface: " << this->get_interface() << '\n';
+    std::cout << "Filters: " << this->get_filters() << '\n';
+    std::cout << "Saved packets: " << _savedPDUs.size() << '\n';
+}
+
 std::string Netscout::get_interface() const
 {
     return this->_interface;
+}
+
+void Netscout::set_interface()
+{
+    std::string newInterface = "";
+
+    std::cout << "Current interface: " << this->_interface << '\n';
+    std::cout << "Enter interface: ";
+
+    std::getline(std::cin, newInterface);
+    this->set_interface(newInterface);
+
+    NetscoutMenu::print_success_msg("New interface has been set."); 
 }
 
 void Netscout::set_interface(std::string interface)
@@ -170,6 +227,19 @@ void Netscout::set_interface(std::string interface)
 std::string Netscout::get_filters() const
 {
     return this->_filters;
+}
+
+void Netscout::set_filters()
+{
+    std::string newFilters = "";
+
+    std::cout << "Current pcap filters: " << this->get_filters() << '\n';
+    std::cout << "Enter pcap filters: ";
+
+    std::getline(std::cin, newFilters);
+    this->set_filters(newFilters);
+
+    NetscoutMenu::print_success_msg("New filters have been set.");
 }
 
 void Netscout::set_filters(std::string filters)
