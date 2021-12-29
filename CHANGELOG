@@ -1,0 +1,19 @@
+Version 1.1.1
+- Added the ability to start the sniffer with command-line arguments.
+  It's possible to set the interface and filters with arguments.
+- Improved building information and added usage information in README.md
+
+Version 1.1
+- Rewritten code to make it more readable and expandable
+- Added main menu:
+    - Start sniffer.
+    - Set interface.
+    - Set filters.
+    - Exporting packets into pcap feature.
+    - Clear saved packets.
+    - Print information about the interface, filters and the amount of saved packets.
+- Added the ability to pause the sniffer and return to the main menu.
+- Removed command-line argument.
+
+Version 1.0
+- Initial release.
