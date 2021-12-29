@@ -9,6 +9,7 @@ using namespace Tins;
 
 class PacketPrinter
 {
+private:
     // Only the relevant protocols are here
     static void edit_ss_ieee802_3(PDU* pdu, std::stringstream& ss);
     static void edit_ss_ethernet2(PDU* pdu, std::stringstream& ss);

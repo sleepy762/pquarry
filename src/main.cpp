@@ -2,7 +2,7 @@
 #include "NetscoutMenu.h"
 #include <unistd.h>
 
-int main()
+int main(int argc, char** argv)
 {
     if (geteuid() != 0)
     {
@@ -10,7 +10,7 @@ int main()
         return 1;
     }
 
-    Netscout netscout;
+    Netscout netscout = Netscout::instantiate_with_args(argc, argv);
     netscout.menu_loop();
 
     return 0;

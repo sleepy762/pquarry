@@ -12,6 +12,7 @@ using namespace Tins;
 
 class Netscout
 {
+private:
     std::string _interface;
     std::string _filters;
 
@@ -25,7 +26,10 @@ class Netscout
 
 public:
     Netscout();
+    Netscout(std::string interface, std::string filters);
     ~Netscout();
+
+    static Netscout instantiate_with_args(int argc, char** argv);
 
     std::string get_interface() const;
     // Setter
