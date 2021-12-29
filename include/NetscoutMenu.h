@@ -5,7 +5,7 @@
 #include <limits>
 #include "ColorPicker.h"
 
-#define VERSION ("1.1")
+#define VERSION ("1.1.1")
 
 // Enum of menu options
 enum menu_entry_index
@@ -21,6 +21,7 @@ enum menu_entry_index
 
 class NetscoutMenu
 {
+private:
     // Maps menu option index to menu option text
     static const std::map<int, const char*> _main_menu_entries;
 

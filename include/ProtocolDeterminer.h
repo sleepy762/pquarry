@@ -15,6 +15,7 @@ extern const protocol_properties NULL_PROPERTIES;
 
 class ProtocolDeterminer
 {
+private:
     static const std::map<uint16_t, protocol_properties> _eth2_types;
     static const std::map<uint16_t, protocol_properties> _ip_protocols;
     static const std::map<uint16_t, protocol_properties> _port_protocols;
