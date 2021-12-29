@@ -217,7 +217,7 @@ void Netscout::set_interface()
     std::string newInterface = "";
 
     std::cout << "Current interface: " << this->_interface << '\n';
-    std::cout << "Enter interface: ";
+    std::cout << "Enter new interface: ";
 
     std::getline(std::cin, newInterface);
     this->set_interface(newInterface);
@@ -240,7 +240,7 @@ void Netscout::set_filters()
     std::string newFilters = "";
 
     std::cout << "Current pcap filters: " << this->get_filters() << '\n';
-    std::cout << "Enter pcap filters: ";
+    std::cout << "Enter new pcap filters: ";
 
     std::getline(std::cin, newFilters);
     this->set_filters(newFilters);

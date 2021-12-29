@@ -50,5 +50,5 @@ void NetscoutMenu::main_menu()
     {
         std::cout << '[' << it->first << ']' << ' ' << it->second << '\n';
     }
-    std::cout << "Select an option please: ";
+    std::cout << "Select an option: ";
 }
