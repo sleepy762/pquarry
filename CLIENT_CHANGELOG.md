@@ -1,4 +1,5 @@
 Version 1.1.2
+- If the user tries to start the sniffer with no interface set, the client will print an appropriate error message.
 - When exporting packets, the program will automatically add the ".pcap" file extension if the user didn't add it.
 - Updated CMakeLists.txt to create a server + rearranged it.
 

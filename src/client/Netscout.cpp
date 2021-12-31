@@ -228,10 +228,12 @@ void Netscout::export_packets() const
     }
 
     // Append ".pcap" to the end of the filename if the user hasn't done it
+    // If the filename is shorter than the extension, also append the extension
     size_t filenameLength = filename.length();
     size_t extensionLength = std::string(PCAP_FILE_EXTENSION).length();
-    if (filenameLength > extensionLength 
-        && filename.substr(filenameLength - extensionLength) != PCAP_FILE_EXTENSION)
+    if (filenameLength < extensionLength
+        || (filenameLength > extensionLength 
+        && filename.substr(filenameLength - extensionLength) != PCAP_FILE_EXTENSION))
     {
         filename += PCAP_FILE_EXTENSION;
     }
