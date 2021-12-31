@@ -16,20 +16,20 @@ set(CMAKE_EXE_LINKER_FLAGS "-ltins") # Link with libtins
 
 
 # Getting all the client source files
-aux_source_directory("src/client" client_core_src)
+aux_source_directory("client/src" client_core_src)
 # Creating the client executable
 add_executable(${CLIENT_NAME} ${client_core_src})
 # Including the client headers
 target_include_directories(${CLIENT_NAME} PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/client
+    ${CMAKE_CURRENT_SOURCE_DIR}/client/include
 )
 
 
 # Getting all the server source files
-aux_source_directory("src/server" server_core_src)
+aux_source_directory("server/src" server_core_src)
 # Creating the server executable
 add_executable(${SERVER_NAME} ${server_core_src})
 # Including the server headers
 target_include_directories(${SERVER_NAME} PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/server
+    ${CMAKE_CURRENT_SOURCE_DIR}/server/include
 )
