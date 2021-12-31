@@ -5,7 +5,7 @@
 #include <limits>
 #include "ColorPicker.h"
 
-#define VERSION ("1.1.1")
+#define VERSION ("1.1.2")
 
 // Enum of menu options
 enum menu_entry_index

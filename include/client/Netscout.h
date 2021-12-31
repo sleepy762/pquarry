@@ -10,6 +10,8 @@
 
 using namespace Tins;
 
+#define PCAP_FILE_EXTENSION (".pcap")
+
 class Netscout
 {
 private:

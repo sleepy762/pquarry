@@ -1,3 +1,7 @@
+Version 1.1.2
+- When exporting packets, the program will automatically add the ".pcap" file extension if the user didn't add it.
+- Updated CMakeLists.txt to create a server + rearranged it.
+
 Version 1.1.1
 - Added the ability to start the sniffer with command-line arguments.
   It's possible to set the interface and filters with arguments.

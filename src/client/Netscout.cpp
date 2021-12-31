@@ -118,6 +118,12 @@ void Netscout::start_sniffer()
     {
         delete _sniffer;
     }
+    // Check if no interface was set
+    if (this->_interface == "")
+    {
+        NetscoutMenu::print_error_msg("You must set an interface.");
+        return;
+    }
 
     std::cout << "Starting sniffer on interface " << this->get_interface() << '\n';
     try
@@ -221,7 +227,14 @@ void Netscout::export_packets() const
         return;
     }
 
-    filename += ".pcap";
+    // Append ".pcap" to the end of the filename if the user hasn't done it
+    size_t filenameLength = filename.length();
+    size_t extensionLength = std::string(PCAP_FILE_EXTENSION).length();
+    if (filenameLength > extensionLength 
+        && filename.substr(filenameLength - extensionLength) != PCAP_FILE_EXTENSION)
+    {
+        filename += PCAP_FILE_EXTENSION;
+    }
 
     // Writes the packets into a pcap file
     PacketWriter writer(filename, DataLinkType<EthernetII>());
