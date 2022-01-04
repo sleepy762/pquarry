@@ -2,7 +2,7 @@
 
 std::list<Packet> Netscout::_saved_packets;
 Sniffer* Netscout::_sniffer = nullptr;
-unsigned int Netscout::_packet_number = 1;
+uint32_t Netscout::_packet_number = 1;
 
 Netscout::Netscout() 
 {
@@ -18,7 +18,6 @@ Netscout::Netscout(std::string interface, std::string filters)
 
 Netscout::~Netscout() 
 {
-    // Free all dynamically allocated memory
     this->clear_saved_packets();
 }
 
@@ -46,6 +45,50 @@ Netscout Netscout::instantiate_with_args(int argc, char** argv)
         }
     }
     return Netscout(interface, filters);
+}
+
+void Netscout::menu_loop()
+{
+    int choice;
+    do
+    {
+        NetscoutMenu::main_menu();
+        choice = NetscoutMenu::get_int();
+
+        switch (choice)
+        {
+        case START_SNIFFER_OPT:
+            this->start_sniffer();
+            break;
+
+        case SET_INTERFACE_OPT:
+            this->set_interface();
+            break;
+
+        case SET_FILTERS_OPT:
+            this->set_filters();
+            break;
+
+        case EXPORT_PACKETS_OPT:
+            this->export_packets();
+            break;
+
+        case CLEAR_SAVED_PACKETS_OPT:
+            this->clear_saved_packets();
+            break;
+
+        case SEE_INFO_OPT:
+            this->see_information();
+            break;
+    
+        case EXIT_OPT:
+            break;
+
+        default:
+            NetscoutMenu::print_error_msg("Invalid option.");
+            break;
+        }
+    } while (choice != EXIT_OPT);
 }
 
 bool Netscout::callback(const Packet& packet)
@@ -149,50 +192,6 @@ void Netscout::start_sniffer()
         NetscoutMenu::print_error_msg(e.what());
     }
     std::cout << '\n' << "Sniffed " << _saved_packets.size() << " packets so far." << '\n';
-}
-
-void Netscout::menu_loop()
-{
-    int choice;
-    do
-    {
-        NetscoutMenu::main_menu();
-        choice = NetscoutMenu::get_int();
-
-        switch (choice)
-        {
-        case START_SNIFFER_OPT:
-            this->start_sniffer();
-            break;
-
-        case SET_INTERFACE_OPT:
-            this->set_interface();
-            break;
-
-        case SET_FILTERS_OPT:
-            this->set_filters();
-            break;
-
-        case EXPORT_PACKETS_OPT:
-            this->export_packets();
-            break;
-
-        case CLEAR_SAVED_PACKETS_OPT:
-            this->clear_saved_packets();
-            break;
-
-        case SEE_INFO_OPT:
-            this->see_information();
-            break;
-    
-        case EXIT_OPT:
-            break;
-
-        default:
-            NetscoutMenu::print_error_msg("Invalid option.");
-            break;
-        }
-    } while (choice != EXIT_OPT);
 }
 
 void Netscout::clear_saved_packets()
