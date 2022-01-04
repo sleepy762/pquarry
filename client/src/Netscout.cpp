@@ -1,6 +1,6 @@
 #include "Netscout.h"
 
-std::list<PDU*> Netscout::_savedPDUs;
+std::list<Packet> Netscout::_saved_packets;
 Sniffer* Netscout::_sniffer = nullptr;
 unsigned int Netscout::_packet_number = 1;
 
@@ -33,7 +33,7 @@ Netscout Netscout::instantiate_with_args(int argc, char** argv)
         interface = argv[1];
         if (argc >= 3)
         {
-            // Concatenate the rest of the arguments into filters
+            // Concatenate the rest of the arguments into filters (starts at argv[2])
             // Alternatively, the user can simply put the filters in quotes
             for (int i = 2; i < argc; i++)
             {
@@ -92,7 +92,8 @@ bool Netscout::callback(const Packet& packet)
     // Output the entire packet string stream
     std::cout << properties.protocolColor << ss.str() << RESET_COLOR << '\n';
 
-    _savedPDUs.push_back(originalPDU);
+    // Saving a copy of the packet while maintaining const correctness
+    _saved_packets.push_back(Packet(packet));
     _packet_number++;
     return true;
 }
@@ -147,7 +148,7 @@ void Netscout::start_sniffer()
     {
         NetscoutMenu::print_error_msg(e.what());
     }
-    std::cout << '\n' << "Sniffed " << _savedPDUs.size() << " packets so far." << '\n';
+    std::cout << '\n' << "Sniffed " << _saved_packets.size() << " packets so far." << '\n';
 }
 
 void Netscout::menu_loop()
@@ -196,14 +197,9 @@ void Netscout::menu_loop()
 
 void Netscout::clear_saved_packets()
 {
-    int amountOfPackets = _savedPDUs.size();
+    int amountOfPackets = _saved_packets.size();
 
-    // the PDUs were allocated on the heap and it's our responsibility to delete them
-    for (auto it = _savedPDUs.begin(); it != _savedPDUs.end(); it++)
-    {
-        delete *it;
-    }
-    _savedPDUs.clear();
+    _saved_packets.clear();
     _packet_number = 1;
 
     const std::string msg = std::to_string(amountOfPackets) + " saved packets were cleared.";
@@ -212,7 +208,7 @@ void Netscout::clear_saved_packets()
 
 void Netscout::export_packets() const
 {
-    if (_savedPDUs.size() == 0)
+    if (_saved_packets.size() == 0)
     {
         NetscoutMenu::print_error_msg("There are no saved packets.");
         return;
@@ -241,9 +237,12 @@ void Netscout::export_packets() const
 
     // Writes the packets into a pcap file
     PacketWriter writer(filename, DataLinkType<EthernetII>());
-    writer.write(_savedPDUs.cbegin(), _savedPDUs.cend());
+    for (auto it = _saved_packets.begin(); it != _saved_packets.end(); it++)
+    {
+        writer.write(*it);
+    }
 
-    const std::string msg = std::to_string(_savedPDUs.size()) + " packets were written to " + filename;
+    const std::string msg = std::to_string(_saved_packets.size()) + " packets were written to " + filename;
     NetscoutMenu::print_success_msg(msg.c_str());
 }
 
@@ -252,7 +251,7 @@ void Netscout::see_information() const
     std::cout << '\n' << "== Information ==" << '\n';
     std::cout << "Interface: " << this->get_interface() << '\n';
     std::cout << "Filters: " << this->get_filters() << '\n';
-    std::cout << "Saved packets: " << _savedPDUs.size() << '\n';
+    std::cout << "Saved packets: " << _saved_packets.size() << '\n';
 }
 
 std::string Netscout::get_interface() const

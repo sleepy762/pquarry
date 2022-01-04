@@ -20,7 +20,7 @@ private:
 
     // These static members are members which are used by the static functions below
     static Sniffer* _sniffer;
-    static std::list<PDU*> _savedPDUs;
+    static std::list<Packet> _saved_packets;
     static unsigned int _packet_number;
 
     static bool callback(const Packet& packet);
