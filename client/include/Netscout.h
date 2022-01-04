@@ -23,7 +23,7 @@ private:
     static std::list<PDU*> _savedPDUs;
     static unsigned int _packet_number;
 
-    static bool callback(const PDU& pdu);
+    static bool callback(const Packet& packet);
     static void sniffer_interrupt(int);
 
 public:

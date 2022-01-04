@@ -1,6 +1,6 @@
 #include "NetscoutMenu.h"
 
-const std::map<int, const char*> NetscoutMenu::_main_menu_entries = 
+const std::map<menu_entry_index, const char*> NetscoutMenu::_main_menu_entries = 
 {
     { START_SNIFFER_OPT, "Start sniffer" },
     { SET_INTERFACE_OPT, "Set interface" },

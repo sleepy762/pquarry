@@ -1,7 +1,10 @@
 Version 1.1.2 -- 31/12/2021
 - If the user tries to start the sniffer with no interface set, the client will print an appropriate error message.
 - When exporting packets, the program will automatically add the ".pcap" file extension if the user didn't add it.
+- Set "immediate mode" when capturing packets, this means that packets will be shown as soon as they are sniffed and not in bursts.
 - Updated CMakeLists.txt to create a server + rearranged it.
+- The sniffer callback now uses a Packet object as the parameter.
+- Changed map template in NetscoutMenu to hold the enum type.
 
 Version 1.1.1 -- 29/12/2021
 - Added the ability to start the sniffer with command-line arguments.

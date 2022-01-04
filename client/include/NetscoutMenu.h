@@ -8,7 +8,7 @@
 #define VERSION ("1.1.2")
 
 // Enum of menu options
-enum menu_entry_index
+typedef enum menu_entry_index
 {
     START_SNIFFER_OPT = 1,
     SET_INTERFACE_OPT,
@@ -17,13 +17,13 @@ enum menu_entry_index
     CLEAR_SAVED_PACKETS_OPT,
     SEE_INFO_OPT,
     EXIT_OPT
-};
+} menu_entry_index;
 
 class NetscoutMenu
 {
 private:
     // Maps menu option index to menu option text
-    static const std::map<int, const char*> _main_menu_entries;
+    static const std::map<menu_entry_index, const char*> _main_menu_entries;
 
 public:
     static void main_menu();

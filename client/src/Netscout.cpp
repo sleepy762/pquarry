@@ -48,7 +48,7 @@ Netscout Netscout::instantiate_with_args(int argc, char** argv)
     return Netscout(interface, filters);
 }
 
-bool Netscout::callback(const PDU& pdu)
+bool Netscout::callback(const Packet& packet)
 {
     // Stores a list of the protocols in the PDU in order
     std::list<PDU::PDUType> protocols;
@@ -56,11 +56,11 @@ bool Netscout::callback(const PDU& pdu)
     // Holds the packet output line
     std::stringstream ss;
     // Packet serial number
-    ss << _packet_number << "\t";
+    ss << _packet_number << '\t';
 
     protocol_properties properties;
 
-    PDU* originalPDU = pdu.clone();
+    PDU* originalPDU = packet.pdu()->clone();
     // Gather data from all the protocols in the list of PDUs
     PDU* inner = originalPDU;
     while (inner != nullptr)
@@ -68,7 +68,7 @@ bool Netscout::callback(const PDU& pdu)
         PDU::PDUType innerType = inner->pdu_type();
 
         // Store the sequence of protocols
-        if (innerType != pdu.RAW)
+        if (innerType != PDU::PDUType::RAW)
         {
             properties = PacketPrinter::get_protocol_properties(innerType, inner, ss);
             protocols.push_back(innerType);
@@ -77,7 +77,7 @@ bool Netscout::callback(const PDU& pdu)
         // Advance the pdu list
         inner = inner->inner_pdu();
     }
-    ss << originalPDU->size() << "\t";
+    ss << originalPDU->size() << '\t';
 
     // Append alternative protocol name, if it exists
     if (properties.protocolString != nullptr)
@@ -131,6 +131,7 @@ void Netscout::start_sniffer()
         // Instantiate the config to add our pcap filters
         SnifferConfiguration config;
         config.set_filter(this->get_filters());
+        config.set_immediate_mode(true);
 
         // The sniffer is allocated on the heap because we want to access the object in a separate function
         // see Netscout::sniffer_interrupt
