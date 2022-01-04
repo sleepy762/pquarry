@@ -1,4 +1,5 @@
-Version 1.1.2 -- 31/12/2021
+Version 1.1.2 -- 4/1/2022
+- Fixed incorrect timestamps for packets exported into pcap files. (Sniffed packets are saved in a list of Packet objects instead of a list of PDU pointers now)
 - If the user tries to start the sniffer with no interface set, the client will print an appropriate error message.
 - When exporting packets, the program will automatically add the ".pcap" file extension if the user didn't add it.
 - Set "immediate mode" when capturing packets, this means that packets will be shown as soon as they are sniffed and not in bursts.
