@@ -10,6 +10,8 @@
 
 using namespace Tins;
 
+#define PCAP_FILE_EXTENSION (".pcap")
+
 class Netscout
 {
 private:
@@ -18,10 +20,10 @@ private:
 
     // These static members are members which are used by the static functions below
     static Sniffer* _sniffer;
-    static std::list<PDU*> _savedPDUs;
-    static unsigned int _packet_number;
+    static std::list<Packet> _saved_packets;
+    static uint32_t _packet_number;
 
-    static bool callback(const PDU& pdu);
+    static bool callback(const Packet& packet);
     static void sniffer_interrupt(int);
 
 public:

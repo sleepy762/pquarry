@@ -1,8 +1,8 @@
 #include "Netscout.h"
 
-std::list<PDU*> Netscout::_savedPDUs;
+std::list<Packet> Netscout::_saved_packets;
 Sniffer* Netscout::_sniffer = nullptr;
-unsigned int Netscout::_packet_number = 1;
+uint32_t Netscout::_packet_number = 1;
 
 Netscout::Netscout() 
 {
@@ -18,7 +18,6 @@ Netscout::Netscout(std::string interface, std::string filters)
 
 Netscout::~Netscout() 
 {
-    // Free all dynamically allocated memory
     this->clear_saved_packets();
 }
 
@@ -33,7 +32,7 @@ Netscout Netscout::instantiate_with_args(int argc, char** argv)
         interface = argv[1];
         if (argc >= 3)
         {
-            // Concatenate the rest of the arguments into filters
+            // Concatenate the rest of the arguments into filters (starts at argv[2])
             // Alternatively, the user can simply put the filters in quotes
             for (int i = 2; i < argc; i++)
             {
@@ -46,101 +45,6 @@ Netscout Netscout::instantiate_with_args(int argc, char** argv)
         }
     }
     return Netscout(interface, filters);
-}
-
-bool Netscout::callback(const PDU& pdu)
-{
-    // Stores a list of the protocols in the PDU in order
-    std::list<PDU::PDUType> protocols;
-
-    // Holds the packet output line
-    std::stringstream ss;
-    // Packet serial number
-    ss << _packet_number << "\t";
-
-    protocol_properties properties;
-
-    PDU* originalPDU = pdu.clone();
-    // Gather data from all the protocols in the list of PDUs
-    PDU* inner = originalPDU;
-    while (inner != nullptr)
-    {
-        PDU::PDUType innerType = inner->pdu_type();
-
-        // Store the sequence of protocols
-        if (innerType != pdu.RAW)
-        {
-            properties = PacketPrinter::get_protocol_properties(innerType, inner, ss);
-            protocols.push_back(innerType);
-        }
-
-        // Advance the pdu list
-        inner = inner->inner_pdu();
-    }
-    ss << originalPDU->size() << "\t";
-
-    // Append alternative protocol name, if it exists
-    if (properties.protocolString != nullptr)
-    {
-        ss << properties.protocolString << '(' << Utils::to_string(protocols.back()) << ')';
-    }
-    else
-    {
-        ss << Utils::to_string(protocols.back());
-    }
-
-    // Output the entire packet string stream
-    std::cout << properties.protocolColor << ss.str() << RESET_COLOR << '\n';
-
-    _savedPDUs.push_back(originalPDU);
-    _packet_number++;
-    return true;
-}
-
-// Stops the sniffer when Ctrl-C is pressed
-void Netscout::sniffer_interrupt(int)
-{
-    if (_sniffer != nullptr)
-    {
-        _sniffer->stop_sniff();
-
-        delete _sniffer;
-        _sniffer = nullptr;
-    }
-    // We want to disable the signal handler when we are not sniffing
-    signal(SIGINT, SIG_DFL);
-}
-
-void Netscout::start_sniffer()
-{
-    // Failsafe
-    if (_sniffer != nullptr)
-    {
-        delete _sniffer;
-    }
-
-    std::cout << "Starting sniffer on interface " << this->get_interface() << '\n';
-    try
-    {
-        // Instantiate the config to add our pcap filters
-        SnifferConfiguration config;
-        config.set_filter(this->get_filters());
-
-        // The sniffer is allocated on the heap because we want to access the object in a separate function
-        // see Netscout::sniffer_interrupt
-        _sniffer = new Sniffer(this->_interface, config);
-
-        // We want the signal handler to work only while sniffing
-        signal(SIGINT, Netscout::sniffer_interrupt);
-
-        // Starts the sniffer
-        _sniffer->sniff_loop(callback);
-    }
-    catch(const std::exception& e)
-    {
-        NetscoutMenu::print_error_msg(e.what());
-    }
-    std::cout << '\n' << "Sniffed " << _savedPDUs.size() << " packets so far." << '\n';
 }
 
 void Netscout::menu_loop()
@@ -187,16 +91,114 @@ void Netscout::menu_loop()
     } while (choice != EXIT_OPT);
 }
 
+bool Netscout::callback(const Packet& packet)
+{
+    // Stores a list of the protocols in the PDU in order
+    std::list<PDU::PDUType> protocols;
+
+    // Holds the packet output line
+    std::stringstream ss;
+    // Packet serial number
+    ss << _packet_number << '\t';
+
+    protocol_properties properties;
+
+    PDU* originalPDU = packet.pdu()->clone();
+    // Gather data from all the protocols in the list of PDUs
+    PDU* inner = originalPDU;
+    while (inner != nullptr)
+    {
+        PDU::PDUType innerType = inner->pdu_type();
+
+        // Store the sequence of protocols
+        if (innerType != PDU::PDUType::RAW)
+        {
+            properties = PacketPrinter::get_protocol_properties(innerType, inner, ss);
+            protocols.push_back(innerType);
+        }
+
+        // Advance the pdu list
+        inner = inner->inner_pdu();
+    }
+    ss << originalPDU->size() << '\t';
+
+    // Append alternative protocol name, if it exists
+    if (properties.protocolString != nullptr)
+    {
+        ss << properties.protocolString << '(' << Utils::to_string(protocols.back()) << ')';
+    }
+    else
+    {
+        ss << Utils::to_string(protocols.back());
+    }
+
+    // Output the entire packet string stream
+    std::cout << properties.protocolColor << ss.str() << RESET_COLOR << '\n';
+
+    // Saving a copy of the packet while maintaining const correctness
+    _saved_packets.push_back(Packet(packet));
+    _packet_number++;
+    return true;
+}
+
+// Stops the sniffer when Ctrl-C is pressed
+void Netscout::sniffer_interrupt(int)
+{
+    if (_sniffer != nullptr)
+    {
+        _sniffer->stop_sniff();
+
+        delete _sniffer;
+        _sniffer = nullptr;
+    }
+    // We want to disable the signal handler when we are not sniffing
+    signal(SIGINT, SIG_DFL);
+}
+
+void Netscout::start_sniffer()
+{
+    // Failsafe
+    if (_sniffer != nullptr)
+    {
+        delete _sniffer;
+    }
+    // Check if no interface was set
+    if (this->_interface == "")
+    {
+        NetscoutMenu::print_error_msg("You must set an interface.");
+        return;
+    }
+
+    std::cout << "Starting sniffer on interface " << this->get_interface() << '\n';
+    try
+    {
+        // Instantiate the config to add our pcap filters
+        SnifferConfiguration config;
+        config.set_filter(this->get_filters());
+        config.set_immediate_mode(true);
+
+        // The sniffer is allocated on the heap because we want to access the object in a separate function
+        // see Netscout::sniffer_interrupt
+        _sniffer = new Sniffer(this->_interface, config);
+
+        // We want the signal handler to work only while sniffing
+        signal(SIGINT, Netscout::sniffer_interrupt);
+
+        // Starts the sniffer
+        _sniffer->sniff_loop(callback);
+    }
+    catch(const std::exception& e)
+    {
+        NetscoutMenu::print_error_msg(e.what());
+    }
+    std::cout << '\n' << "Sniffed " << _saved_packets.size() << " packets so far." << '\n';
+}
+
 void Netscout::clear_saved_packets()
 {
-    int amountOfPackets = _savedPDUs.size();
+    int amountOfPackets = _saved_packets.size();
 
-    // the PDUs were allocated on the heap and it's our responsibility to delete them
-    for (auto it = _savedPDUs.begin(); it != _savedPDUs.end(); it++)
-    {
-        delete *it;
-    }
-    _savedPDUs.clear();
+    _saved_packets.clear();
     _packet_number = 1;
 
     const std::string msg = std::to_string(amountOfPackets) + " saved packets were cleared.";
@@ -205,7 +207,7 @@ void Netscout::clear_saved_packets()
 
 void Netscout::export_packets() const
 {
-    if (_savedPDUs.size() == 0)
+    if (_saved_packets.size() == 0)
     {
         NetscoutMenu::print_error_msg("There are no saved packets.");
         return;
@@ -221,13 +223,25 @@ void Netscout::export_packets() const
         return;
     }
 
-    filename += ".pcap";
+    // Append ".pcap" to the end of the filename if the user hasn't done it
+    // If the filename is shorter than the extension, also append the extension
+    size_t filenameLength = filename.length();
+    size_t extensionLength = std::string(PCAP_FILE_EXTENSION).length();
+    if (filenameLength < extensionLength
+        || (filenameLength > extensionLength 
+        && filename.substr(filenameLength - extensionLength) != PCAP_FILE_EXTENSION))
+    {
+        filename += PCAP_FILE_EXTENSION;
+    }
 
     // Writes the packets into a pcap file
     PacketWriter writer(filename, DataLinkType<EthernetII>());
-    writer.write(_savedPDUs.cbegin(), _savedPDUs.cend());
+    for (auto it = _saved_packets.begin(); it != _saved_packets.end(); it++)
+    {
+        writer.write(*it);
+    }
 
-    const std::string msg = std::to_string(_savedPDUs.size()) + " packets were written to " + filename;
+    const std::string msg = std::to_string(_saved_packets.size()) + " packets were written to " + filename;
     NetscoutMenu::print_success_msg(msg.c_str());
 }
 
@@ -236,7 +250,7 @@ void Netscout::see_information() const
     std::cout << '\n' << "== Information ==" << '\n';
     std::cout << "Interface: " << this->get_interface() << '\n';
     std::cout << "Filters: " << this->get_filters() << '\n';
-    std::cout << "Saved packets: " << _savedPDUs.size() << '\n';
+    std::cout << "Saved packets: " << _saved_packets.size() << '\n';
 }
 
 std::string Netscout::get_interface() const
