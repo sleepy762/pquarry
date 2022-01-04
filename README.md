@@ -6,7 +6,7 @@ A simple network analyzer.
 
 - Debian/Arch Dependencies (apt/pacman): `cmake`, `make`, `gcc`
 - Gentoo Dependencies (emerge): `dev-util/cmake`, `sys-devel/make`, `sys-devel/gcc`
-- [libtins](https://github.com/mfontanini/libtins) is another dependency which has to be built and installed. You might have to install it manually because it most likely doesn't exist in your package manager (currently available on the [AUR](https://aur.archlinux.org/packages/libtins/)).
+- [libtins](https://github.com/mfontanini/libtins) is another dependency which has to be built and installed. **Make sure to enable C++11 support when compiling libtins.**
 
 Run the following commands in a terminal in the root directory of the project:
 ```

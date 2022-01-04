@@ -24,9 +24,8 @@ int main(int argc, char** argv)
     uint16_t port;
     strVal >> port;
 
-    //NetscoutServer server = NetscoutServer(argv[1], port);
-    std::cout << "ip address: " << argv[1] << '\n';
-    std::cout << "port: " << port << '\n';
+    NetscoutServer server = NetscoutServer(argv[1], port);
+    server.start();
 
     return 0;
 }
