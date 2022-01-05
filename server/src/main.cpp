@@ -24,8 +24,15 @@ int main(int argc, char** argv)
     uint16_t port;
     strVal >> port;
 
-    NetscoutServer server = NetscoutServer(argv[1], port);
-    server.start();
+    try
+    {
+        NetscoutServer server = NetscoutServer(argv[1], port);
+        server.start();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 
     return 0;
 }
