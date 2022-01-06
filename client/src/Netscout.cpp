@@ -207,10 +207,12 @@ void Netscout::connect_to_remote_sniffer()
     std::getline(std::cin, ip);
     std::cout << "Enter the server port: ";
     port = NetscoutMenu::get_value<uint16_t>();
-
+    std::cout << '\n';
+    
     std::queue<byte_array> q;
     RemoteSniffer rsniffer = RemoteSniffer(ip, port);
     rsniffer.connect();
+    rsniffer.configure_sniffer();
     rsniffer.packet_receiver(q);
 }
 

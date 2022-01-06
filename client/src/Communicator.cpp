@@ -2,8 +2,12 @@
 
 void Communicator::send(int32_t server_sockfd, std::string msg)
 {
+    if (msg.size() == 0)
+    {
+        throw std::runtime_error("Can't send empty message.");
+    }
+    
     const char* data = msg.c_str();
-
     if (::send(server_sockfd, data, msg.size(), 0) == -1)
     {
         throw std::runtime_error("Failed to send message to server. (Server closed)");

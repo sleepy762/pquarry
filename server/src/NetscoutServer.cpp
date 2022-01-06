@@ -89,12 +89,17 @@ void NetscoutServer::accept()
     }
 
     std::cout << "Client connected." << '\n';
-    // Get necessary info from the client 
-    std::string interface = this->get_interface_from_client();
-    std::cout << interface;
-    // bug here? where tf is the cout ????????? ? ???
-    //std::string filters = this->get_filters_from_client();
-    //this->start_sniffer(interface, filters);
+    this->configure_sniffer_with_client();
+    this->start_sniffer();
+}
+
+void NetscoutServer::configure_sniffer_with_client()
+{
+    // Get the necessary info from the client 
+    this->_chosen_interface = this->get_interface_from_client();
+    this->_chosen_filters = this->get_filters_from_client();
+
+    Communicator::send(this->_client_sockfd, "Configuration complete!");
 }
 
 std::string NetscoutServer::get_interface_from_client() const
@@ -139,7 +144,7 @@ std::string NetscoutServer::get_formatted_interfaces_msg() const
     return msg;
 }
 
-bool NetscoutServer::is_interface_valid(std::string& interface) const
+bool NetscoutServer::is_interface_valid(const std::string& interface) const
 {
     for (auto it = _avail_interfaces.cbegin(); it != _avail_interfaces.cend(); it++)
     {
@@ -152,18 +157,71 @@ bool NetscoutServer::is_interface_valid(std::string& interface) const
     return false;
 }
 
-void NetscoutServer::start_sniffer(const std::string& interface, const std::string& filters)
+std::string NetscoutServer::get_filters_from_client() const
+{
+    bool valid;
+    std::string filters = "";
+    std::string fmt_msg = "Enter pcap filters (write 'no' for no filters)";
+
+    Communicator::send(this->_client_sockfd, fmt_msg);
+    do
+    {
+        std::string filter_error = "";
+
+        filters = Communicator::recv(this->_client_sockfd);
+        valid = this->are_filters_valid(filters, filter_error);
+
+        if (!valid)
+        {
+            std::string msg = "Invalid filters: " + filter_error;
+            Communicator::send(this->_client_sockfd, msg);
+        }
+    } while (!valid);
+    
+    return filters;
+}
+
+bool NetscoutServer::are_filters_valid(std::string& filters, std::string& error_out) const
+{
+    // It's impossible to send an empty string and recv it, so we must use some special string
+    // It's also important to clear the special string from the filters because it's not valid
+    if (filters == NO_FILTERS_STR)
+    {
+        filters = "";
+        return true;
+    }
+
+    // Check if the filters are valid
+    try
+    {
+        SnifferConfiguration config;
+        config.set_filter(filters);
+        Sniffer tempSniffer = Sniffer(this->_chosen_interface, config);
+    }
+    catch(const std::exception& e)
+    {
+        error_out = e.what();
+        return false;
+    }
+    return true;
+}
+
+void NetscoutServer::start_sniffer()
 {
     SnifferConfiguration config;
-    config.set_filter(filters);
+    config.set_filter(this->_chosen_filters);
     config.set_immediate_mode(true);
     
-    Sniffer sniffer = Sniffer(interface, config);
-    sniffer.set_extract_raw_pdus(true); // Don't interpret packets
+    Sniffer sniffer = Sniffer(this->_chosen_interface, config);
+    //sniffer.set_extract_raw_pdus(true); // Don't interpret packets
     sniffer.sniff_loop(callback);
 }
 
 bool NetscoutServer::callback(const Packet& packet)
 {
+    const PDU* pdu = packet.pdu();
+    const EthernetII* e = pdu->find_pdu<EthernetII>();
+    if (e != nullptr)
+        std::cout << e->src_addr() << "->" << e->dst_addr() << '\n';
     return true;
 }

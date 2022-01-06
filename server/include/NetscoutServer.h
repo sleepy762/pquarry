@@ -13,30 +13,37 @@
 using namespace Tins;
 
 using interface_ip_pair = std::pair<std::string, std::string>;
-using interface_ip_pair_vector = std::vector<interface_ip_pair>;
+#define NO_FILTERS_STR ("no")
 
 class NetscoutServer
 {
 private:
+    // Server related members
     std::string _ip_address;
     uint16_t _port;
     int32_t _server_sockfd;
     int32_t _client_sockfd;
 
+    // Miscellaneous members
     int64_t _bytes_sent;
-    interface_ip_pair_vector _avail_interfaces;
+    std::vector<interface_ip_pair> _avail_interfaces;
+
+    // The client sets these
+    std::string _chosen_interface;
+    std::string _chosen_filters;
 
     void accept();
+    void configure_sniffer_with_client();
 
     void acquire_interfaces();
     std::string get_formatted_interfaces_msg() const;
     std::string get_interface_from_client() const;
-    bool is_interface_valid(std::string& interface) const;
+    bool is_interface_valid(const std::string& interface) const;
 
     std::string get_filters_from_client() const;
-    bool are_filters_valid(std::string& filters) const;
+    bool are_filters_valid(std::string& filters, std::string& error_out) const;
 
-    void start_sniffer(const std::string& interface, const std::string& filters);
+    void start_sniffer();
 
     static bool callback(const Packet& packet);
 
