@@ -1,5 +1,7 @@
 #include "NetscoutServer.h"
 
+int32_t NetscoutServer::_client_sockfd = INVALID_SOCKET;
+
 NetscoutServer::NetscoutServer(std::string ip, uint16_t port)
 {
     this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -15,7 +17,7 @@ NetscoutServer::NetscoutServer(std::string ip, uint16_t port)
 
 NetscoutServer::~NetscoutServer()
 {
-    close(this->_client_sockfd);
+    close(_client_sockfd);
     close(this->_server_sockfd);
 }
 
@@ -81,9 +83,9 @@ void NetscoutServer::start()
 
 void NetscoutServer::accept()
 {
-    this->_client_sockfd = ::accept(this->_server_sockfd, nullptr, nullptr);
+    _client_sockfd = ::accept(this->_server_sockfd, nullptr, nullptr);
 
-    if (this->_client_sockfd == INVALID_SOCKET)
+    if (_client_sockfd == INVALID_SOCKET)
     {
         throw std::runtime_error("Accepted invalid socket.");
     }
@@ -99,7 +101,15 @@ void NetscoutServer::configure_sniffer_with_client()
     this->_chosen_interface = this->get_interface_from_client();
     this->_chosen_filters = this->get_filters_from_client();
 
-    Communicator::send(this->_client_sockfd, "Configuration complete!");
+    // We should ignore our own traffic
+    // This filter removes traffic on the port which we are working with
+    if (this->_chosen_filters != "")
+    {
+        this->_chosen_filters += " and ";
+    }
+    this->_chosen_filters += "not port " + std::to_string(this->_port);
+
+    Communicator::send(_client_sockfd, "Configuration complete!");
 }
 
 std::string NetscoutServer::get_interface_from_client() const
@@ -109,15 +119,15 @@ std::string NetscoutServer::get_interface_from_client() const
     std::string fmt_msg = this->get_formatted_interfaces_msg();
 
     // Send the initial message
-    Communicator::send(this->_client_sockfd, fmt_msg);
+    Communicator::send(_client_sockfd, fmt_msg);
     do
     {
-        interface = Communicator::recv(this->_client_sockfd);
+        interface = Communicator::recv(_client_sockfd);
         valid = this->is_interface_valid(interface);
 
         if (!valid)
         {
-            Communicator::send(this->_client_sockfd, "Invalid interface.");
+            Communicator::send(_client_sockfd, "Invalid interface.");
         }
     } while (!valid);
     
@@ -163,18 +173,18 @@ std::string NetscoutServer::get_filters_from_client() const
     std::string filters = "";
     std::string fmt_msg = "Enter pcap filters (write 'no' for no filters)";
 
-    Communicator::send(this->_client_sockfd, fmt_msg);
+    Communicator::send(_client_sockfd, fmt_msg);
     do
     {
         std::string filter_error = "";
 
-        filters = Communicator::recv(this->_client_sockfd);
+        filters = Communicator::recv(_client_sockfd);
         valid = this->are_filters_valid(filters, filter_error);
 
         if (!valid)
         {
             std::string msg = "Invalid filters: " + filter_error;
-            Communicator::send(this->_client_sockfd, msg);
+            Communicator::send(_client_sockfd, msg);
         }
     } while (!valid);
     
@@ -211,17 +221,20 @@ void NetscoutServer::start_sniffer()
     SnifferConfiguration config;
     config.set_filter(this->_chosen_filters);
     config.set_immediate_mode(true);
-    
+
     Sniffer sniffer = Sniffer(this->_chosen_interface, config);
-    //sniffer.set_extract_raw_pdus(true); // Don't interpret packets
+    sniffer.set_extract_raw_pdus(true); // Don't interpret packets
     sniffer.sniff_loop(callback);
 }
 
 bool NetscoutServer::callback(const Packet& packet)
 {
-    const PDU* pdu = packet.pdu();
-    const EthernetII* e = pdu->find_pdu<EthernetII>();
-    if (e != nullptr)
-        std::cout << e->src_addr() << "->" << e->dst_addr() << '\n';
+    PDU* pdu = packet.pdu()->clone();
+    byte_array bytes = pdu->serialize();
+
+    std::string bytes_string(bytes.begin(), bytes.end());
+    Communicator::send(_client_sockfd, bytes_string);
+
+    delete pdu;
     return true;
 }

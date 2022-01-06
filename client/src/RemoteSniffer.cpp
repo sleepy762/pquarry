@@ -19,6 +19,13 @@ RemoteSniffer::~RemoteSniffer()
     close(this->_server_sockfd);
 }
 
+void RemoteSniffer::start()
+{
+    this->connect();
+    this->configure_sniffer();
+    this->packet_receiver();
+}
+
 void RemoteSniffer::connect()
 {
     struct sockaddr_in serv_addr;
@@ -79,7 +86,7 @@ void RemoteSniffer::configure_sniffer()
     this->_sniffer_configured = true;
 }
 
-void RemoteSniffer::packet_receiver(std::queue<byte_array>& packet_queue)
+void RemoteSniffer::packet_receiver()
 {
     if (this->_connect_succeeded == false)
     {
@@ -95,8 +102,11 @@ void RemoteSniffer::packet_receiver(std::queue<byte_array>& packet_queue)
     std::cout << "Filters: " << this->_remote_filters << '\n';
     while (true)
     {
+        // BUG - recv() may return 2 packets at once...
         std::string msg = Communicator::recv(this->_server_sockfd);
-        std::cout << msg << '\n';
+        EthernetII eth_pdu = EthernetII((const uint8_t*)msg.c_str(), msg.size());
+        Packet packet = Packet(eth_pdu);
+        Netscout::callback(packet);
     }
 }
 

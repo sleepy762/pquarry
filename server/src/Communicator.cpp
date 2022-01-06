@@ -23,7 +23,15 @@ std::string Communicator::recv(int32_t client_sockfd)
     {
         throw std::runtime_error("Failed to receive message from client. (Client disconnected)");
     }
-    buf[bytes_received] = '\0';
+    
+    if (bytes_received > MAX_RECV_BUF_SIZE)
+    {
+        buf[MAX_RECV_BUF_SIZE - 1] = '\0';
+    }
+    else
+    {
+        buf[bytes_received] = '\0';
+    }
 
-    return std::string(buf);
+    return std::string(buf, bytes_received);
 }

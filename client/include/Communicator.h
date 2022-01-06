@@ -3,7 +3,8 @@
 #include <sys/socket.h>
 #include <stdexcept>
 
-#define MAX_RECV_BUF_SIZE (1024)
+#define MAX_PACKET_SIZE (65536)
+#define MAX_RECV_BUF_SIZE (MAX_PACKET_SIZE)
 
 class Communicator
 {

@@ -211,9 +211,7 @@ void Netscout::connect_to_remote_sniffer()
     
     std::queue<byte_array> q;
     RemoteSniffer rsniffer = RemoteSniffer(ip, port);
-    rsniffer.connect();
-    rsniffer.configure_sniffer();
-    rsniffer.packet_receiver(q);
+    rsniffer.start();
 }
 
 void Netscout::clear_saved_packets()

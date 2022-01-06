@@ -22,7 +22,7 @@ private:
     std::string _ip_address;
     uint16_t _port;
     int32_t _server_sockfd;
-    int32_t _client_sockfd;
+    static int32_t _client_sockfd; // Must be static so the callback can access it too
 
     // Miscellaneous members
     int64_t _bytes_sent;

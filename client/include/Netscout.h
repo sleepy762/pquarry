@@ -28,6 +28,9 @@ private:
     static bool callback(const Packet& packet);
     static void sniffer_interrupt(int);
 
+    // We must friend RemoteSniffer in order to let it use our callback
+    friend class RemoteSniffer;
+
 public:
     Netscout();
     Netscout(std::string interface, std::string filters);

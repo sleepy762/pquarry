@@ -6,6 +6,7 @@
 #include <queue>
 #include <iostream>
 #include "Communicator.h"
+#include "Netscout.h"
 
 using namespace Tins;
 
@@ -31,11 +32,16 @@ private:
     // This function is specific for this class
     static std::string get_nonempty_line();
 
+    // TODO, close socket when SIGINT is sent
+    static void remote_sniffer_interrupt(int);
+
+    void connect();
+    void configure_sniffer();
+    void packet_receiver();
+
 public:
     RemoteSniffer(std::string ip, uint16_t port);
     ~RemoteSniffer();
 
-    void connect();
-    void configure_sniffer();
-    void packet_receiver(std::queue<byte_array>& packet_queue);
+    void start();
 };
