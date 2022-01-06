@@ -8,7 +8,6 @@
 #include "ColorPicker.h"
 #include "NetscoutMenu.h"
 #include "RemoteSniffer.h"
-#include <queue>
 
 using namespace Tins;
 

@@ -3,7 +3,6 @@
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <queue>
 #include <iostream>
 #include "Communicator.h"
 #include "Netscout.h"
