@@ -7,6 +7,8 @@
 #include "PacketPrinter.h"
 #include "ColorPicker.h"
 #include "NetscoutMenu.h"
+#include "RemoteSniffer.h"
+#include <queue>
 
 using namespace Tins;
 
@@ -54,4 +56,6 @@ public:
     void see_information() const;
 
     void start_sniffer();
+
+    void connect_to_remote_sniffer();
 };

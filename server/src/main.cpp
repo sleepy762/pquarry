@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
+#include "Version.h"
 
 int main(int argc, char** argv)
 {
@@ -24,6 +25,7 @@ int main(int argc, char** argv)
     uint16_t port;
     strVal >> port;
 
+    std::cout << "Starting NetScout Server Version " << SERVER_VERSION << '\n';
     try
     {
         NetscoutServer server = NetscoutServer(argv[1], port);

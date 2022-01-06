@@ -6,7 +6,7 @@ void Communicator::send(int32_t client_sockfd, std::string msg)
 
     if (::send(client_sockfd, data, msg.size(), 0) == -1)
     {
-        throw std::runtime_error("Failed to send message to client.");
+        throw std::runtime_error("Failed to send message to client. (Client disconnected)");
     }
 }
 
@@ -14,11 +14,12 @@ std::string Communicator::recv(int32_t client_sockfd)
 {
     char buf[MAX_RECV_BUF_SIZE];
 
-    if (::recv(client_sockfd, buf, MAX_RECV_BUF_SIZE, 0) == -1)
+    ssize_t bytes_received = ::recv(client_sockfd, buf, MAX_RECV_BUF_SIZE, 0);
+    if (bytes_received <= 0)
     {
-        throw std::runtime_error("Failed to receive message from client.");
+        throw std::runtime_error("Failed to receive message from client. (Client disconnected)");
     }
-    buf[MAX_RECV_BUF_SIZE - 1] = '\0';
+    buf[bytes_received] = '\0';
 
     return std::string(buf);
 }

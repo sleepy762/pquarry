@@ -53,40 +53,50 @@ void Netscout::menu_loop()
     do
     {
         NetscoutMenu::main_menu();
-        choice = NetscoutMenu::get_int();
-
-        switch (choice)
+        choice = NetscoutMenu::get_value<int32_t>();
+        try
         {
-        case START_SNIFFER_OPT:
-            this->start_sniffer();
-            break;
+            switch (choice)
+            {
+            case START_SNIFFER_OPT:
+                this->start_sniffer();
+                break;
 
-        case SET_INTERFACE_OPT:
-            this->set_interface();
-            break;
+            case CONNECT_TO_REMOTE_SNIFFER_OPT:
+                this->connect_to_remote_sniffer();
+                break;
 
-        case SET_FILTERS_OPT:
-            this->set_filters();
-            break;
+            case SET_INTERFACE_OPT:
+                this->set_interface();
+                break;
 
-        case EXPORT_PACKETS_OPT:
-            this->export_packets();
-            break;
+            case SET_FILTERS_OPT:
+                this->set_filters();
+                break;
 
-        case CLEAR_SAVED_PACKETS_OPT:
-            this->clear_saved_packets();
-            break;
+            case EXPORT_PACKETS_OPT:
+                this->export_packets();
+                break;
 
-        case SEE_INFO_OPT:
-            this->see_information();
-            break;
-    
-        case EXIT_OPT:
-            break;
+            case CLEAR_SAVED_PACKETS_OPT:
+                this->clear_saved_packets();
+                break;
 
-        default:
-            NetscoutMenu::print_error_msg("Invalid option.");
-            break;
+            case SEE_INFO_OPT:
+                this->see_information();
+                break;
+        
+            case EXIT_OPT:
+                break;
+
+            default:
+                throw std::runtime_error("Invalid option.");
+                break;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            NetscoutMenu::print_error_msg(e.what());
         }
     } while (choice != EXIT_OPT);
 }
@@ -165,33 +175,43 @@ void Netscout::start_sniffer()
     // Check if no interface was set
     if (this->_interface == "")
     {
-        NetscoutMenu::print_error_msg("You must set an interface.");
-        return;
+        throw std::runtime_error("You must set an interface.");
     }
 
     std::cout << "Starting sniffer on interface " << this->get_interface() << '\n';
-    try
-    {
-        // Instantiate the config to add our pcap filters
-        SnifferConfiguration config;
-        config.set_filter(this->get_filters());
-        config.set_immediate_mode(true);
 
-        // The sniffer is allocated on the heap because we want to access the object in a separate function
-        // see Netscout::sniffer_interrupt
-        _sniffer = new Sniffer(this->_interface, config);
+    // Instantiate the config to add our pcap filters
+    SnifferConfiguration config;
+    config.set_filter(this->get_filters());
+    config.set_immediate_mode(true);
 
-        // We want the signal handler to work only while sniffing
-        signal(SIGINT, Netscout::sniffer_interrupt);
+    // The sniffer is allocated on the heap because we want to access the object in a separate function
+    // see Netscout::sniffer_interrupt
+    _sniffer = new Sniffer(this->_interface, config);
 
-        // Starts the sniffer
-        _sniffer->sniff_loop(callback);
-    }
-    catch(const std::exception& e)
-    {
-        NetscoutMenu::print_error_msg(e.what());
-    }
+    // We want the signal handler to work only while sniffing
+    signal(SIGINT, Netscout::sniffer_interrupt);
+
+    // Starts the sniffer
+    _sniffer->sniff_loop(callback);
+
     std::cout << '\n' << "Sniffed " << _saved_packets.size() << " packets so far." << '\n';
+}
+
+void Netscout::connect_to_remote_sniffer()
+{
+    std::string ip;
+    uint16_t port;
+
+    std::cout << "Enter the IP address of the server: ";
+    std::getline(std::cin, ip);
+    std::cout << "Enter the server port: ";
+    port = NetscoutMenu::get_value<uint16_t>();
+
+    std::queue<byte_array> q;
+    RemoteSniffer rsniffer = RemoteSniffer(ip, port);
+    rsniffer.connect();
+    rsniffer.packet_receiver(q);
 }
 
 void Netscout::clear_saved_packets()
@@ -209,8 +229,7 @@ void Netscout::export_packets() const
 {
     if (_saved_packets.size() == 0)
     {
-        NetscoutMenu::print_error_msg("There are no saved packets.");
-        return;
+        throw std::runtime_error("There are no saved packets.");
     }
 
     std::string filename = "";
@@ -219,8 +238,7 @@ void Netscout::export_packets() const
 
     if (filename == "")
     {
-        NetscoutMenu::print_error_msg("Aborting export because filename is empty.");
-        return;
+        throw std::runtime_error("Aborting export because filename is empty.");
     }
 
     // Append ".pcap" to the end of the filename if the user hasn't done it

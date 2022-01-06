@@ -2,15 +2,15 @@
 
 NetscoutServer::NetscoutServer(std::string ip, uint16_t port)
 {
-    this->_ip_address = ip;
-    this->_port = port;
-
     this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->_server_sockfd == INVALID_SOCKET)
     {
         throw std::runtime_error("Invalid socket.");
     }
+
     this->acquire_interfaces();
+    this->_ip_address = ip;
+    this->_port = port;
 }
 
 NetscoutServer::~NetscoutServer()
@@ -92,6 +92,7 @@ void NetscoutServer::accept()
     // Get necessary info from the client 
     std::string interface = this->get_interface_from_client();
     std::cout << interface;
+    // bug here? where tf is the cout ????????? ? ???
     //std::string filters = this->get_filters_from_client();
     //this->start_sniffer(interface, filters);
 }
@@ -111,7 +112,7 @@ std::string NetscoutServer::get_interface_from_client() const
 
         if (!valid)
         {
-            Communicator::send(this->_client_sockfd, "Invalid interface.\n");
+            Communicator::send(this->_client_sockfd, "Invalid interface.");
         }
     } while (!valid);
     
@@ -128,7 +129,11 @@ std::string NetscoutServer::get_formatted_interfaces_msg() const
         msg += it->first;
         msg += " : IP ";
         msg += it->second;
-        msg += '\n';
+        // Add a newline if its not the last interface
+        if (it + 1 != _avail_interfaces.cend())
+        {
+            msg += '\n';
+        }
     }
 
     return msg;
