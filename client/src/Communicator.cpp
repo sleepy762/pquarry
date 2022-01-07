@@ -8,7 +8,7 @@ void Communicator::send(int32_t server_sockfd, std::string msg)
     }
     
     const char* data = msg.c_str();
-    if (::send(server_sockfd, data, msg.size(), 0) == -1)
+    if (::send(server_sockfd, data, msg.size(), MSG_NOSIGNAL) == -1)
     {
         throw std::runtime_error("Failed to send message to server. (Server closed)");
     }
@@ -16,7 +16,7 @@ void Communicator::send(int32_t server_sockfd, std::string msg)
 
 std::string Communicator::recv(int32_t server_sockfd)
 {
-    char buf[MAX_RECV_BUF_SIZE];
+    char buf[MAX_RECV_BUF_SIZE] = {0};
 
     ssize_t bytes_received = ::recv(server_sockfd, buf, MAX_RECV_BUF_SIZE, 0);
     if (bytes_received <= 0)

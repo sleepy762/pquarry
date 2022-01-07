@@ -8,6 +8,7 @@
 #include <vector>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <memory>
 #include "Communicator.h"
 
 using namespace Tins;

@@ -208,8 +208,7 @@ void Netscout::connect_to_remote_sniffer()
     std::cout << "Enter the server port: ";
     port = NetscoutMenu::get_value<uint16_t>();
     std::cout << '\n';
-    
-    std::queue<byte_array> q;
+
     RemoteSniffer rsniffer = RemoteSniffer(ip, port);
     rsniffer.start();
 }

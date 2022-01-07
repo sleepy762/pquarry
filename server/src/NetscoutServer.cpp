@@ -229,12 +229,19 @@ void NetscoutServer::start_sniffer()
 
 bool NetscoutServer::callback(const Packet& packet)
 {
-    PDU* pdu = packet.pdu()->clone();
+    std::unique_ptr<PDU> pdu(packet.pdu()->clone());
     byte_array bytes = pdu->serialize();
 
     std::string bytes_string(bytes.begin(), bytes.end());
-    Communicator::send(_client_sockfd, bytes_string);
+    try
+    {
+        Communicator::send(_client_sockfd, bytes_string);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return false; // Stop the sniffer
+    }
 
-    delete pdu;
     return true;
 }
