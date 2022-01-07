@@ -10,6 +10,7 @@
 #include <net/if.h>
 #include <memory>
 #include "Communicator.h"
+#include "Serializer.h"
 
 using namespace Tins;
 

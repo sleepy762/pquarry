@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Communicator.h"
 #include "Netscout.h"
+#include "Deserializer.h"
 
 using namespace Tins;
 

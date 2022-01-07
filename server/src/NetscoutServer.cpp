@@ -232,7 +232,7 @@ bool NetscoutServer::callback(const Packet& packet)
     std::unique_ptr<PDU> pdu(packet.pdu()->clone());
     byte_array bytes = pdu->serialize();
 
-    std::string bytes_string(bytes.begin(), bytes.end());
+    std::string bytes_string = Serializer::serialize_data(bytes);
     try
     {
         Communicator::send(_client_sockfd, bytes_string);

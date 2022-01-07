@@ -100,13 +100,26 @@ void RemoteSniffer::packet_receiver()
     std::cout << '\n' << "Starting remote sniffer at " << this->_ip << ':' << this->_port << '\n';
     std::cout << "Interface: " << this->_remote_interface << '\n';
     std::cout << "Filters: " << this->_remote_filters << '\n';
+
+    std::string data_buffer = "";
     while (true)
     {
-        // BUG - recv() may return 2 packets at once...
-        std::string msg = Communicator::recv(this->_server_sockfd);
-        EthernetII eth_pdu = EthernetII((const uint8_t*)msg.c_str(), msg.size());
-        Packet packet = Packet(eth_pdu);
-        Netscout::callback(packet);
+        data_buffer += Communicator::recv(this->_server_sockfd);
+        bool partial_data_flag = false;
+
+        while (data_buffer.size() > 0)
+        {
+            std::string single_packet_data = Deserializer::deserialize_data(data_buffer, partial_data_flag);
+            if (partial_data_flag) 
+            {
+                // If we have partial data, don't contruct a packet, instead receive more data
+                break;
+            }
+
+            EthernetII eth_pdu = EthernetII((const uint8_t*)single_packet_data.c_str(), single_packet_data.size());
+            Packet packet = Packet(eth_pdu);
+            Netscout::callback(packet);
+        }
     }
 }
 
