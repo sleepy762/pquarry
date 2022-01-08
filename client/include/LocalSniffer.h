@@ -3,17 +3,17 @@
 #include <iostream>
 #include <list>
 #include <string>
-#include <signal.h>
 #include "PacketPrinter.h"
 #include "ColorPicker.h"
 #include "NetscoutMenu.h"
 #include "RemoteSniffer.h"
+#include "SignalHandler.h"
 
 using namespace Tins;
 
 #define PCAP_FILE_EXTENSION (".pcap")
 
-class Netscout
+class LocalSniffer
 {
 private:
     std::string _interface;
@@ -31,11 +31,11 @@ private:
     friend class RemoteSniffer;
 
 public:
-    Netscout();
-    Netscout(std::string interface, std::string filters);
-    ~Netscout();
+    LocalSniffer();
+    LocalSniffer(std::string interface, std::string filters);
+    ~LocalSniffer();
 
-    static Netscout instantiate_with_args(int argc, char** argv);
+    static LocalSniffer instantiate_with_args(int argc, char** argv);
 
     std::string get_interface() const;
     // Setter

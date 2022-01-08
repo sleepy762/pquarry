@@ -1,9 +1,11 @@
 #include "RemoteSniffer.h"
 
+int32_t RemoteSniffer::_server_sockfd = INVALID_SOCKET;
+
 RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
 {
-    this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->_server_sockfd == INVALID_SOCKET)
+    _server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (_server_sockfd == INVALID_SOCKET)
     {
         throw std::runtime_error("Failed to create socket.");
     }
@@ -16,7 +18,7 @@ RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
 
 RemoteSniffer::~RemoteSniffer()
 {
-    close(this->_server_sockfd);
+    close(_server_sockfd);
 }
 
 void RemoteSniffer::start()
@@ -36,7 +38,7 @@ void RemoteSniffer::connect()
     {
         throw std::runtime_error("Invalid address.");
     }
-    if (::connect(this->_server_sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
+    if (::connect(_server_sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
     {
         throw std::runtime_error("Connection failed.");
     }
@@ -57,7 +59,7 @@ void RemoteSniffer::configure_sniffer()
     std::string response = "";
     while (!configuration_finished)
     {
-        std::string server_msg = Communicator::recv(this->_server_sockfd);
+        std::string server_msg = Communicator::recv(_server_sockfd);
         std::cout << server_msg << '\n';
 
         // Check if the substring "Invalid" is in the server_msg
@@ -80,7 +82,7 @@ void RemoteSniffer::configure_sniffer()
         if (!configuration_finished)
         {
             response = RemoteSniffer::get_nonempty_line();
-            Communicator::send(this->_server_sockfd, response);
+            Communicator::send(_server_sockfd, response);
         }
     }
     this->_sniffer_configured = true;
@@ -97,6 +99,9 @@ void RemoteSniffer::packet_receiver()
         throw std::runtime_error("RemoteSniffer::configure_sniffer() wasn't called.");
     }
 
+    // Close the socket and return to the main menu upon interrupt
+    SignalHandler::set_signal_handler(SIGINT, RemoteSniffer::remote_sniffer_interrupt, 0);
+    
     std::cout << '\n' << "Starting remote sniffer at " << this->_ip << ':' << this->_port << '\n';
     std::cout << "Interface: " << this->_remote_interface << '\n';
     std::cout << "Filters: " << this->_remote_filters << '\n';
@@ -104,7 +109,7 @@ void RemoteSniffer::packet_receiver()
     std::string data_buffer = "";
     while (true)
     {
-        data_buffer += Communicator::recv(this->_server_sockfd);
+        data_buffer += Communicator::recv(_server_sockfd);
         bool partial_data_flag = false;
 
         while (data_buffer.size() > 0)
@@ -118,9 +123,17 @@ void RemoteSniffer::packet_receiver()
 
             EthernetII eth_pdu = EthernetII((const uint8_t*)single_packet_data.c_str(), single_packet_data.size());
             Packet packet = Packet(eth_pdu);
-            Netscout::callback(packet);
+            LocalSniffer::callback(packet);
         }
     }
+}
+
+void RemoteSniffer::remote_sniffer_interrupt(int)
+{
+    // Terminate the connection to return to the main menu
+    close(_server_sockfd);
+    // We want to disable the signal handler when we are not connected to the server
+    SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
 }
 
 std::string RemoteSniffer::get_nonempty_line()

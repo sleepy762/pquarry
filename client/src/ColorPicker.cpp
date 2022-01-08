@@ -1,7 +1,7 @@
 #include "ColorPicker.h"
 
 // Default color values
-const char* ColorPicker::get_color_by_pdu_type(PDU::PDUType type)
+const char* ColorPicker::get_color_by_pdu_type(const PDU::PDUType type)
 {
     switch (type)
     {

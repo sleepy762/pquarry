@@ -15,5 +15,5 @@ using namespace Tins;
 class ColorPicker
 {
 public:
-    static const char* get_color_by_pdu_type(PDU::PDUType type);
+    static const char* get_color_by_pdu_type(const PDU::PDUType type);
 };

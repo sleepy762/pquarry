@@ -1,4 +1,4 @@
-#include "Netscout.h"
+#include "LocalSniffer.h"
 #include "NetscoutMenu.h"
 #include <unistd.h>
 
@@ -10,8 +10,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Netscout netscout = Netscout::instantiate_with_args(argc, argv);
-    netscout.menu_loop();
+    LocalSniffer local_sniffer = LocalSniffer::instantiate_with_args(argc, argv);
+    local_sniffer.menu_loop();
 
     return 0;
 }

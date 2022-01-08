@@ -17,7 +17,10 @@ NetscoutServer::NetscoutServer(std::string ip, uint16_t port)
 
 NetscoutServer::~NetscoutServer()
 {
-    close(_client_sockfd);
+    if (_client_sockfd != INVALID_SOCKET)
+    {
+        close(_client_sockfd);
+    }
     close(this->_server_sockfd);
 }
 

@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <iostream>
 #include "Communicator.h"
-#include "Netscout.h"
+#include "LocalSniffer.h"
 #include "Deserializer.h"
 
 using namespace Tins;
@@ -18,7 +18,7 @@ private:
     // Server related members
     std::string _ip;
     uint16_t _port;
-    int32_t _server_sockfd;
+    static int32_t _server_sockfd; // Must be static so the signal handler can access it
 
     // Status members
     bool _connect_succeeded;

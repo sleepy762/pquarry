@@ -21,7 +21,7 @@ std::string Deserializer::deserialize_data(std::string& data, bool& partial_data
         data.erase(0, PACKET_SIZE_LENGTH);
         
         deserialized_data = data.substr(0, packet_size);
-        data.erase(0, packet_size); // Remove the packet data
+        data.erase(0, packet_size); // Remove the packet data that we have just read
     }
 
     return deserialized_data;
