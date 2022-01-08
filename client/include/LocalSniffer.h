@@ -3,6 +3,7 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <memory>
 #include "PacketPrinter.h"
 #include "ColorPicker.h"
 #include "NetscoutMenu.h"

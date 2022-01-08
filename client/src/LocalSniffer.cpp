@@ -113,9 +113,9 @@ bool LocalSniffer::callback(const Packet& packet)
 
     protocol_properties properties;
 
-    PDU* originalPDU = packet.pdu()->clone();
+    std::unique_ptr<PDU> originalPDU(packet.pdu()->clone());
     // Gather data from all the protocols in the list of PDUs
-    PDU* inner = originalPDU;
+    PDU* inner = originalPDU.get();
     while (inner != nullptr)
     {
         PDU::PDUType innerType = inner->pdu_type();

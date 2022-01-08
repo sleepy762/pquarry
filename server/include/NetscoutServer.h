@@ -26,8 +26,7 @@ private:
     int32_t _server_sockfd;
     static int32_t _client_sockfd; // Must be static so the callback can access it too
 
-    // Miscellaneous members
-    int64_t _bytes_sent;
+    // Stores the interfaces which are available on the machine which is running the server
     std::vector<interface_ip_pair> _avail_interfaces;
 
     // The client sets these
