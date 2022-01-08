@@ -11,24 +11,23 @@ int main(int argc, char** argv)
         std::cerr << "This program must be run as root in order to work." << std::endl;
         return 1;
     }
-    // We expect 3 arguments because the 1st is the executable name, the 2nd is the ip address
-    // and the 3rd is the port
-    if (argc < 3)
+    // We expect a port to be passed as an argument
+    if (argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <ip address> <port>" << '\n';
+        std::cerr << "Usage: " << argv[0] << " <port>" << '\n';
         return 1;
     }
     
     // Converting string to integer to get the port
     std::stringstream strVal;
-    strVal << argv[2];
+    strVal << argv[1];
     uint16_t port;
     strVal >> port;
 
     std::cout << "Starting NetScout Server Version " << SERVER_VERSION << '\n';
     try
     {
-        NetscoutServer server = NetscoutServer(argv[1], port);
+        NetscoutServer server = NetscoutServer(port);
         server.start();
     }
     catch(const std::exception& e)

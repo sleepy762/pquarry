@@ -2,16 +2,15 @@
 
 int32_t NetscoutServer::_client_sockfd = INVALID_SOCKET;
 
-NetscoutServer::NetscoutServer(std::string ip, uint16_t port)
+NetscoutServer::NetscoutServer(uint16_t port)
 {
     this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->_server_sockfd == INVALID_SOCKET)
     {
-        throw std::runtime_error("Invalid socket.");
+        throw std::runtime_error("Failed to create socket.");
     }
 
     this->acquire_interfaces();
-    this->_ip_address = ip;
     this->_port = port;
 }
 
@@ -62,7 +61,7 @@ void NetscoutServer::start()
 
     if (bind(this->_server_sockfd, (struct sockaddr*)&sock_addr, sizeof(sock_addr)) < 0)
     {
-        throw std::runtime_error("Binding failed.");
+        throw std::runtime_error("Binding failed. (Try using a different port)");
     }
     if (listen(this->_server_sockfd, 0) < 0)
     {
@@ -86,14 +85,21 @@ void NetscoutServer::start()
 
 void NetscoutServer::accept()
 {
-    _client_sockfd = ::accept(this->_server_sockfd, nullptr, nullptr);
+    struct sockaddr_in client_addr;
+    socklen_t client_addrlen = sizeof(client_addr);
 
+    _client_sockfd = ::accept(this->_server_sockfd, (struct sockaddr*)&client_addr, &client_addrlen);
     if (_client_sockfd == INVALID_SOCKET)
     {
         throw std::runtime_error("Accepted invalid socket.");
     }
 
-    std::cout << "Client connected." << '\n';
+    // Get the connected client's ip address and port
+    char client_ip_address[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &client_addr.sin_addr, client_ip_address, sizeof(client_ip_address));
+    uint16_t client_port = ntohs(client_addr.sin_port);
+
+    std::cout << "Client connected at " << client_ip_address << ":" << client_port << '\n';
     this->configure_sniffer_with_client();
     this->start_sniffer();
 }

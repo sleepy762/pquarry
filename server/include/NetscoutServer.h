@@ -21,7 +21,6 @@ class NetscoutServer
 {
 private:
     // Server related members
-    std::string _ip_address;
     uint16_t _port;
     int32_t _server_sockfd;
     static int32_t _client_sockfd; // Must be static so the callback can access it too
@@ -49,7 +48,7 @@ private:
     static bool callback(const Packet& packet);
 
 public:
-    NetscoutServer(std::string ip, uint16_t port);
+    NetscoutServer(uint16_t port);
     ~NetscoutServer();
     
     void start();
