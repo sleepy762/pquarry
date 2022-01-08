@@ -1,27 +1,27 @@
-#include "Netscout.h"
+#include "LocalSniffer.h"
 
-std::list<Packet> Netscout::_saved_packets;
-Sniffer* Netscout::_sniffer = nullptr;
-uint32_t Netscout::_packet_number = 1;
+std::list<Packet> LocalSniffer::_saved_packets;
+Sniffer* LocalSniffer::_sniffer = nullptr;
+uint32_t LocalSniffer::_packet_number = 1;
 
-Netscout::Netscout() 
+LocalSniffer::LocalSniffer() 
 {
-    this->_interface = "";
-    this->_filters = "";
+    this->_local_interface = "";
+    this->_local_filters = "";
 }
 
-Netscout::Netscout(std::string interface, std::string filters)
+LocalSniffer::LocalSniffer(std::string interface, std::string filters)
 {
-    this->_interface = interface;
-    this->_filters = filters;
+    this->_local_interface = interface;
+    this->_local_filters = filters;
 }
 
-Netscout::~Netscout() 
+LocalSniffer::~LocalSniffer() 
 {
     this->clear_saved_packets();
 }
 
-Netscout Netscout::instantiate_with_args(int argc, char** argv)
+LocalSniffer LocalSniffer::instantiate_with_args(int argc, char** argv)
 {
     std::string interface = "";
     std::string filters = "";
@@ -44,54 +44,64 @@ Netscout Netscout::instantiate_with_args(int argc, char** argv)
             }
         }
     }
-    return Netscout(interface, filters);
+    return LocalSniffer(interface, filters);
 }
 
-void Netscout::menu_loop()
+void LocalSniffer::menu_loop()
 {
     int choice;
     do
     {
         NetscoutMenu::main_menu();
-        choice = NetscoutMenu::get_int();
-
-        switch (choice)
+        choice = NetscoutMenu::get_value<int32_t>();
+        try
         {
-        case START_SNIFFER_OPT:
-            this->start_sniffer();
-            break;
+            switch (choice)
+            {
+            case START_SNIFFER_OPT:
+                this->start_sniffer();
+                break;
 
-        case SET_INTERFACE_OPT:
-            this->set_interface();
-            break;
+            case CONNECT_TO_REMOTE_SNIFFER_OPT:
+                this->connect_to_remote_sniffer();
+                break;
 
-        case SET_FILTERS_OPT:
-            this->set_filters();
-            break;
+            case SET_INTERFACE_OPT:
+                this->set_interface();
+                break;
 
-        case EXPORT_PACKETS_OPT:
-            this->export_packets();
-            break;
+            case SET_FILTERS_OPT:
+                this->set_filters();
+                break;
 
-        case CLEAR_SAVED_PACKETS_OPT:
-            this->clear_saved_packets();
-            break;
+            case EXPORT_PACKETS_OPT:
+                this->export_packets();
+                break;
 
-        case SEE_INFO_OPT:
-            this->see_information();
-            break;
-    
-        case EXIT_OPT:
-            break;
+            case CLEAR_SAVED_PACKETS_OPT:
+                this->clear_saved_packets();
+                break;
 
-        default:
-            NetscoutMenu::print_error_msg("Invalid option.");
-            break;
+            case SEE_INFO_OPT:
+                this->see_information();
+                break;
+        
+            case EXIT_OPT:
+                break;
+
+            default:
+                throw std::runtime_error("Invalid option.");
+                break;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            NetscoutMenu::print_error_msg(e.what());
         }
     } while (choice != EXIT_OPT);
 }
 
-bool Netscout::callback(const Packet& packet)
+bool LocalSniffer::callback(const Packet& packet)
 {
     // Stores a list of the protocols in the PDU in order
     std::list<PDU::PDUType> protocols;
@@ -103,9 +113,9 @@ bool Netscout::callback(const Packet& packet)
 
     protocol_properties properties;
 
-    PDU* originalPDU = packet.pdu()->clone();
+    std::unique_ptr<PDU> originalPDU(packet.pdu()->clone());
     // Gather data from all the protocols in the list of PDUs
-    PDU* inner = originalPDU;
+    PDU* inner = originalPDU.get();
     while (inner != nullptr)
     {
         PDU::PDUType innerType = inner->pdu_type();
@@ -142,7 +152,7 @@ bool Netscout::callback(const Packet& packet)
 }
 
 // Stops the sniffer when Ctrl-C is pressed
-void Netscout::sniffer_interrupt(int)
+void LocalSniffer::sniffer_interrupt(int)
 {
     if (_sniffer != nullptr)
     {
@@ -152,10 +162,10 @@ void Netscout::sniffer_interrupt(int)
         _sniffer = nullptr;
     }
     // We want to disable the signal handler when we are not sniffing
-    signal(SIGINT, SIG_DFL);
+    SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
 }
 
-void Netscout::start_sniffer()
+void LocalSniffer::start_sniffer()
 {
     // Failsafe
     if (_sniffer != nullptr)
@@ -163,38 +173,51 @@ void Netscout::start_sniffer()
         delete _sniffer;
     }
     // Check if no interface was set
-    if (this->_interface == "")
+    if (this->_local_interface == "")
     {
-        NetscoutMenu::print_error_msg("You must set an interface.");
-        return;
+        throw std::runtime_error("You must set an interface.");
     }
 
     std::cout << "Starting sniffer on interface " << this->get_interface() << '\n';
-    try
-    {
-        // Instantiate the config to add our pcap filters
-        SnifferConfiguration config;
-        config.set_filter(this->get_filters());
-        config.set_immediate_mode(true);
 
-        // The sniffer is allocated on the heap because we want to access the object in a separate function
-        // see Netscout::sniffer_interrupt
-        _sniffer = new Sniffer(this->_interface, config);
+    // Instantiate the config to add our pcap filters
+    SnifferConfiguration config;
+    config.set_filter(this->get_filters());
+    config.set_immediate_mode(true);
 
-        // We want the signal handler to work only while sniffing
-        signal(SIGINT, Netscout::sniffer_interrupt);
+    // The sniffer is allocated on the heap because we want to access the object in a separate function
+    // see LocalSniffer::sniffer_interrupt
+    _sniffer = new Sniffer(this->_local_interface, config);
 
-        // Starts the sniffer
-        _sniffer->sniff_loop(callback);
-    }
-    catch(const std::exception& e)
-    {
-        NetscoutMenu::print_error_msg(e.what());
-    }
-    std::cout << '\n' << "Sniffed " << _saved_packets.size() << " packets so far." << '\n';
+    // We want the signal handler to work only while sniffing
+    SignalHandler::set_signal_handler(SIGINT, LocalSniffer::sniffer_interrupt, 0);
+
+    // Starts the sniffer
+    _sniffer->sniff_loop(callback);
 }
 
-void Netscout::clear_saved_packets()
+void LocalSniffer::connect_to_remote_sniffer()
+{
+    std::string ip = "";
+    uint16_t port;
+
+    std::cout << "Enter the IP address of the server: ";
+    std::getline(std::cin, ip);
+
+    if (ip == "")
+    {
+        throw std::runtime_error("Aborting connection because the IP address is empty.");
+    }
+
+    std::cout << "Enter the server port: ";
+    port = NetscoutMenu::get_value<uint16_t>();
+    std::cout << '\n';
+
+    RemoteSniffer rsniffer = RemoteSniffer(ip, port);
+    rsniffer.start();
+}
+
+void LocalSniffer::clear_saved_packets()
 {
     int amountOfPackets = _saved_packets.size();
 
@@ -205,12 +228,11 @@ void Netscout::clear_saved_packets()
     NetscoutMenu::print_success_msg(msg.c_str());
 }
 
-void Netscout::export_packets() const
+void LocalSniffer::export_packets() const
 {
     if (_saved_packets.size() == 0)
     {
-        NetscoutMenu::print_error_msg("There are no saved packets.");
-        return;
+        throw std::runtime_error("There are no saved packets.");
     }
 
     std::string filename = "";
@@ -219,8 +241,7 @@ void Netscout::export_packets() const
 
     if (filename == "")
     {
-        NetscoutMenu::print_error_msg("Aborting export because filename is empty.");
-        return;
+        throw std::runtime_error("Aborting export because filename is empty.");
     }
 
     // Append ".pcap" to the end of the filename if the user hasn't done it
@@ -245,7 +266,7 @@ void Netscout::export_packets() const
     NetscoutMenu::print_success_msg(msg.c_str());
 }
 
-void Netscout::see_information() const
+void LocalSniffer::see_information() const
 {
     std::cout << '\n' << "== Information ==" << '\n';
     std::cout << "Interface: " << this->get_interface() << '\n';
@@ -253,16 +274,16 @@ void Netscout::see_information() const
     std::cout << "Saved packets: " << _saved_packets.size() << '\n';
 }
 
-std::string Netscout::get_interface() const
+std::string LocalSniffer::get_interface() const
 {
-    return this->_interface;
+    return this->_local_interface;
 }
 
-void Netscout::set_interface()
+void LocalSniffer::set_interface()
 {
     std::string newInterface = "";
 
-    std::cout << "Current interface: " << this->_interface << '\n';
+    std::cout << "Current interface: " << this->_local_interface << '\n';
     std::cout << "Enter new interface: ";
 
     std::getline(std::cin, newInterface);
@@ -271,17 +292,17 @@ void Netscout::set_interface()
     NetscoutMenu::print_success_msg("New interface has been set."); 
 }
 
-void Netscout::set_interface(std::string interface)
+void LocalSniffer::set_interface(std::string interface)
 {
-    this->_interface = interface;
+    this->_local_interface = interface;
 }
 
-std::string Netscout::get_filters() const
+std::string LocalSniffer::get_filters() const
 {
-    return this->_filters;
+    return this->_local_filters;
 }
 
-void Netscout::set_filters()
+void LocalSniffer::set_filters()
 {
     std::string newFilters = "";
 
@@ -294,7 +315,7 @@ void Netscout::set_filters()
     NetscoutMenu::print_success_msg("New filters have been set.");
 }
 
-void Netscout::set_filters(std::string filters)
+void LocalSniffer::set_filters(std::string filters)
 {
-    this->_filters = filters;
+    this->_local_filters = filters;
 }

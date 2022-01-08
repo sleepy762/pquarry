@@ -1,3 +1,14 @@
+Version 1.2.0 -- 8/1/2022
+- Added ability to sniff packets on a remote machine.
+- Renamed the Netscout class to LocalSniffer.
+- Created a SignalHandler class to set signal handlers.
+- Removed line that prints the amount of packets sniffed so far from the local sniffer.
+- When receiving a message, the buffer is fully initialized with null characters.
+- Changed the NetscoutMenu::get_int() function into a more generic template function NetscoutMenu::get_value<>().
+- The switch in the LocalSniffer::menu_loop() function was moved inside a try-catch block. 
+- The try-catch block in LocalSniffer::start_sniffer() was removed.
+- Fixed memory leak in the callback of the local sniffer.
+
 Version 1.1.2 -- 4/1/2022
 - Fixed incorrect timestamps for packets exported into pcap files. (Sniffed packets are saved in a list of Packet objects instead of a list of PDU pointers now)
 - If the user tries to start the sniffer with no interface set, the client will print an appropriate error message.

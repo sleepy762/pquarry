@@ -3,20 +3,22 @@
 #include <iostream>
 #include <list>
 #include <string>
-#include <signal.h>
+#include <memory>
 #include "PacketPrinter.h"
 #include "ColorPicker.h"
 #include "NetscoutMenu.h"
+#include "RemoteSniffer.h"
+#include "SignalHandler.h"
 
 using namespace Tins;
 
 #define PCAP_FILE_EXTENSION (".pcap")
 
-class Netscout
+class LocalSniffer
 {
 private:
-    std::string _interface;
-    std::string _filters;
+    std::string _local_interface;
+    std::string _local_filters;
 
     // These static members are members which are used by the static functions below
     static Sniffer* _sniffer;
@@ -26,12 +28,15 @@ private:
     static bool callback(const Packet& packet);
     static void sniffer_interrupt(int);
 
-public:
-    Netscout();
-    Netscout(std::string interface, std::string filters);
-    ~Netscout();
+    // We must friend RemoteSniffer in order to let it use our callback
+    friend class RemoteSniffer;
 
-    static Netscout instantiate_with_args(int argc, char** argv);
+public:
+    LocalSniffer();
+    LocalSniffer(std::string interface, std::string filters);
+    ~LocalSniffer();
+
+    static LocalSniffer instantiate_with_args(int argc, char** argv);
 
     std::string get_interface() const;
     // Setter
@@ -54,4 +59,6 @@ public:
     void see_information() const;
 
     void start_sniffer();
+
+    void connect_to_remote_sniffer();
 };
