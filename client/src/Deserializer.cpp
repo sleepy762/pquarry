@@ -1,7 +1,16 @@
 #include "Deserializer.h"
-
+#include <iostream>
 std::string Deserializer::deserialize_data(std::string& data, bool& partial_data_flag)
 {
+    // If there are less than PACKET_SIZE_LENGTH bytes that means that there is definitely partial data
+    // there must be at least PACKET_SIZE_LENGTH bytes in the buffer otherwise the packet_size
+    // will be wrong and result in an exception
+    if (data.size() < PACKET_SIZE_LENGTH)
+    {
+        partial_data_flag = true;
+        return "";
+    }
+
     std::stringstream ss;
     // The first bytes are the packet size
     ss << data.substr(0, PACKET_SIZE_LENGTH);
@@ -11,6 +20,7 @@ std::string Deserializer::deserialize_data(std::string& data, bool& partial_data
     std::string deserialized_data = "";
 
     // Checking the data size without the 5 bytes of the packet size
+    std::cout << data.size() << ' ' << packet_size << ' ';
     if (data.size() - PACKET_SIZE_LENGTH < packet_size)
     {
         partial_data_flag = true;
