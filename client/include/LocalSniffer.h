@@ -17,8 +17,8 @@ using namespace Tins;
 class LocalSniffer
 {
 private:
-    std::string _interface;
-    std::string _filters;
+    std::string _local_interface;
+    std::string _local_filters;
 
     // These static members are members which are used by the static functions below
     static Sniffer* _sniffer;

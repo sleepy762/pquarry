@@ -6,14 +6,14 @@ uint32_t LocalSniffer::_packet_number = 1;
 
 LocalSniffer::LocalSniffer() 
 {
-    this->_interface = "";
-    this->_filters = "";
+    this->_local_interface = "";
+    this->_local_filters = "";
 }
 
 LocalSniffer::LocalSniffer(std::string interface, std::string filters)
 {
-    this->_interface = interface;
-    this->_filters = filters;
+    this->_local_interface = interface;
+    this->_local_filters = filters;
 }
 
 LocalSniffer::~LocalSniffer() 
@@ -173,7 +173,7 @@ void LocalSniffer::start_sniffer()
         delete _sniffer;
     }
     // Check if no interface was set
-    if (this->_interface == "")
+    if (this->_local_interface == "")
     {
         throw std::runtime_error("You must set an interface.");
     }
@@ -187,7 +187,7 @@ void LocalSniffer::start_sniffer()
 
     // The sniffer is allocated on the heap because we want to access the object in a separate function
     // see LocalSniffer::sniffer_interrupt
-    _sniffer = new Sniffer(this->_interface, config);
+    _sniffer = new Sniffer(this->_local_interface, config);
 
     // We want the signal handler to work only while sniffing
     SignalHandler::set_signal_handler(SIGINT, LocalSniffer::sniffer_interrupt, 0);
@@ -198,11 +198,17 @@ void LocalSniffer::start_sniffer()
 
 void LocalSniffer::connect_to_remote_sniffer()
 {
-    std::string ip;
+    std::string ip = "";
     uint16_t port;
 
     std::cout << "Enter the IP address of the server: ";
     std::getline(std::cin, ip);
+
+    if (ip == "")
+    {
+        throw std::runtime_error("Aborting connection because the IP address is empty.");
+    }
+
     std::cout << "Enter the server port: ";
     port = NetscoutMenu::get_value<uint16_t>();
     std::cout << '\n';
@@ -270,14 +276,14 @@ void LocalSniffer::see_information() const
 
 std::string LocalSniffer::get_interface() const
 {
-    return this->_interface;
+    return this->_local_interface;
 }
 
 void LocalSniffer::set_interface()
 {
     std::string newInterface = "";
 
-    std::cout << "Current interface: " << this->_interface << '\n';
+    std::cout << "Current interface: " << this->_local_interface << '\n';
     std::cout << "Enter new interface: ";
 
     std::getline(std::cin, newInterface);
@@ -288,12 +294,12 @@ void LocalSniffer::set_interface()
 
 void LocalSniffer::set_interface(std::string interface)
 {
-    this->_interface = interface;
+    this->_local_interface = interface;
 }
 
 std::string LocalSniffer::get_filters() const
 {
-    return this->_filters;
+    return this->_local_filters;
 }
 
 void LocalSniffer::set_filters()
@@ -311,5 +317,5 @@ void LocalSniffer::set_filters()
 
 void LocalSniffer::set_filters(std::string filters)
 {
-    this->_filters = filters;
+    this->_local_filters = filters;
 }
