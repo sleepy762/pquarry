@@ -167,6 +167,11 @@ void LocalSniffer::sniffer_interrupt(int)
 
 void LocalSniffer::start_sniffer()
 {
+    if (geteuid() != 0)
+    {
+        throw std::runtime_error("This feature requires root access in order to work.");
+    }
+    
     // Failsafe
     if (_sniffer != nullptr)
     {

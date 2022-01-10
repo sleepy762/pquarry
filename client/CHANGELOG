@@ -1,3 +1,6 @@
+Version 1.2.1 -- 10/1/2022
+- Doesn't ask for root access in order to launch the program. It is only required when sniffing locally.
+
 Version 1.2.0 -- 8/1/2022
 - Added ability to sniff packets on a remote machine.
 - Renamed the Netscout class to LocalSniffer.
