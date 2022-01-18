@@ -47,6 +47,39 @@ LocalSniffer LocalSniffer::instantiate_with_args(int argc, char** argv)
     return LocalSniffer(interface, filters);
 }
 
+std::vector<interface_ip_pair> LocalSniffer::get_interface_list() const
+{
+    char buf[1024];
+    struct ifconf ifc;
+    struct ifreq* ifr;
+    int32_t num_interfaces;
+    std::vector<interface_ip_pair> interface_vec;
+
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    // Querying the available interfaces
+    ifc.ifc_len = sizeof(buf);
+    ifc.ifc_buf = buf;
+    if (ioctl(sockfd, SIOCGIFCONF, &ifc) < 0)
+    {
+        throw std::runtime_error("Call to ioctl failed.");
+    }
+
+    // Iterating the interfaces and adding the IP address too
+    ifr = ifc.ifc_req;
+    num_interfaces = ifc.ifc_len / sizeof(struct ifreq);
+    for (int i = 0; i < num_interfaces; i++)
+    {
+        struct ifreq* item = &ifr[i];
+        
+        std::string interface = item->ifr_name;
+        std::string ip = inet_ntoa(((struct sockaddr_in*)&item->ifr_addr)->sin_addr);
+
+        interface_vec.push_back(interface_ip_pair(interface, ip));
+    }
+    return interface_vec;
+}
+
 void LocalSniffer::menu_loop()
 {
     int choice;
@@ -54,6 +87,7 @@ void LocalSniffer::menu_loop()
     {
         NetscoutMenu::main_menu();
         choice = NetscoutMenu::get_value<int32_t>();
+        std::cout << '\n';
         try
         {
             switch (choice)
@@ -273,7 +307,7 @@ void LocalSniffer::export_packets() const
 
 void LocalSniffer::see_information() const
 {
-    std::cout << '\n' << "== Information ==" << '\n';
+    std::cout << "== Information ==" << '\n';
     std::cout << "Interface: " << this->get_interface() << '\n';
     std::cout << "Filters: " << this->get_filters() << '\n';
     std::cout << "Saved packets: " << _saved_packets.size() << '\n';
@@ -287,6 +321,15 @@ std::string LocalSniffer::get_interface() const
 void LocalSniffer::set_interface()
 {
     std::string newInterface = "";
+    const std::vector<interface_ip_pair> interfaces = this->get_interface_list();
+
+    // Print all the available interfaces for convenience
+    std::cout << "Available interfaces: " << '\n';
+    for (auto it = interfaces.cbegin(); it != interfaces.cend(); it++)
+    {
+        std::cout << it->first << " : IP " << it->second << '\n';
+    }
+    std::cout << '\n';
 
     std::cout << "Current interface: " << this->_local_interface << '\n';
     std::cout << "Enter new interface: ";

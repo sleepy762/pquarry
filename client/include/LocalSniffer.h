@@ -5,6 +5,9 @@
 #include <string>
 #include <memory>
 #include <unistd.h>
+#include <vector>
+#include <sys/ioctl.h>
+#include <net/if.h>
 #include "PacketPrinter.h"
 #include "ColorPicker.h"
 #include "NetscoutMenu.h"
@@ -13,6 +16,8 @@
 
 using namespace Tins;
 
+using interface_ip_pair = std::pair<std::string, std::string>;
+
 #define PCAP_FILE_EXTENSION (".pcap")
 
 class LocalSniffer
@@ -20,6 +25,8 @@ class LocalSniffer
 private:
     std::string _local_interface;
     std::string _local_filters;
+
+    std::vector<interface_ip_pair> get_interface_list() const;
 
     // These static members are members which are used by the static functions below
     static Sniffer* _sniffer;

@@ -10,7 +10,6 @@ NetscoutServer::NetscoutServer(uint16_t port)
         throw std::runtime_error("Failed to create socket.");
     }
 
-    this->acquire_interfaces();
     this->_port = port;
 }
 
@@ -23,7 +22,7 @@ NetscoutServer::~NetscoutServer()
     close(this->_server_sockfd);
 }
 
-void NetscoutServer::acquire_interfaces()
+void NetscoutServer::update_interface_list()
 {
     char buf[1024];
     struct ifconf ifc;
@@ -100,6 +99,7 @@ void NetscoutServer::accept()
     uint16_t client_port = ntohs(client_addr.sin_port);
 
     std::cout << "Client connected at " << client_ip_address << ":" << client_port << '\n';
+    this->update_interface_list();
     this->configure_sniffer_with_client();
     this->start_sniffer();
 }
