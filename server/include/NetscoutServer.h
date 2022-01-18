@@ -15,6 +15,7 @@
 using namespace Tins;
 
 using interface_ip_pair = std::pair<std::string, std::string>;
+
 #define NO_FILTERS_STR ("no")
 
 class NetscoutServer
@@ -35,7 +36,7 @@ private:
     void accept();
     void configure_sniffer_with_client();
 
-    void acquire_interfaces();
+    void update_interface_list();
     std::string get_formatted_interfaces_msg() const;
     std::string get_interface_from_client() const;
     bool is_interface_valid(const std::string& interface) const;

@@ -32,7 +32,6 @@ private:
     // This function is specific for this class
     static std::string get_nonempty_line();
 
-    // TODO, close socket when SIGINT is sent
     static void remote_sniffer_interrupt(int);
 
     void connect();

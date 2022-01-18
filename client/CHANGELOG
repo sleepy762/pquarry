@@ -1,3 +1,8 @@
+Version 1.2.1 -- 18/1/2022
+- Doesn't ask for root access in order to launch the program. It is only required when sniffing locally.
+- When setting an interface, the program will print a list of available interfaces for convenience.
+- Added a newline print after selecting an option from the main menu.
+
 Version 1.2.0 -- 8/1/2022
 - Added ability to sniff packets on a remote machine.
 - Renamed the Netscout class to LocalSniffer.
