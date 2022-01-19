@@ -1,4 +1,4 @@
 #pragma once
 
 // Server version
-#define SERVER_VERSION ("1.0.1")
+#define SERVER_VERSION ("1.1.0")

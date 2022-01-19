@@ -11,6 +11,7 @@
 #include <memory>
 #include "Communicator.h"
 #include "Serializer.h"
+#include "CapabilitySetter.h"
 
 using namespace Tins;
 

@@ -3,6 +3,7 @@
 #include <sstream>
 #include <unistd.h>
 #include "Version.h"
+#include "CapabilitySetter.h"
 
 int main(int argc, char** argv)
 {
@@ -17,7 +18,18 @@ int main(int argc, char** argv)
         std::cerr << "Usage: " << argv[0] << " <port>" << '\n';
         return 1;
     }
-    
+
+    // Reduce root permissions
+    try
+    {
+        CapabilitySetter::initialize_caps();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        exit(1);
+    }
+
     // Converting string to integer to get the port
     std::stringstream strVal;
     strVal << argv[1];
