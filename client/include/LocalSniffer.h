@@ -13,6 +13,7 @@
 #include "NetscoutMenu.h"
 #include "RemoteSniffer.h"
 #include "SignalHandler.h"
+#include "CapabilitySetter.h"
 
 using namespace Tins;
 

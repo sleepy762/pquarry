@@ -24,6 +24,8 @@ NetscoutServer::~NetscoutServer()
 
 void NetscoutServer::update_interface_list()
 {
+    this->_avail_interfaces.clear();
+
     char buf[1024];
     struct ifconf ifc;
     struct ifreq* ifr;
@@ -231,9 +233,13 @@ void NetscoutServer::start_sniffer()
     config.set_filter(this->_chosen_filters);
     config.set_immediate_mode(true);
 
+    CapabilitySetter::set_required_caps();
+
     Sniffer sniffer = Sniffer(this->_chosen_interface, config);
     sniffer.set_extract_raw_pdus(true); // Don't interpret packets
     sniffer.sniff_loop(callback);
+    
+    CapabilitySetter::clear_required_caps();
 }
 
 bool NetscoutServer::callback(const Packet& packet)

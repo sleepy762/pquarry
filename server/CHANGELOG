@@ -1,3 +1,8 @@
+Version 1.1.0 -- 19/1/2022
+- New dependency: libcap.
+- Root permissions are reduced during initialization, and when the sniffer is not active. The program only sets the CAP_NET_RAW permission when it's required. 
+- Fixed oversight where connecting multiple times to the server made it keep adding interfaces to the interface list.
+
 Version 1.0.1 -- 18/1/2022
 - The list of available interfaces is updated every time a client connects to the server, instead of every time the server is started.
 
