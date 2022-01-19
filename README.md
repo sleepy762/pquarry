@@ -5,6 +5,7 @@ A simple network analyzer.
 ## Building
 
 - Arch Dependencies (pacman): `cmake`, `make`, `gcc`, `libcap`
+- Debian Dependencies (apt): `cmake`, `make`, `gcc`, `libcap-dev`
 - Gentoo Dependencies (emerge): `dev-util/cmake`, `sys-devel/make`, `sys-devel/gcc`, `sys-libs/libcap`
 - [libtins](https://github.com/mfontanini/libtins) is another dependency which has to be built and installed (including its own dependencies). **Make sure to enable C++11 support when compiling libtins.**
 
