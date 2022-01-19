@@ -190,7 +190,10 @@ std::string NetscoutServer::get_filters_from_client() const
         std::string filter_error = "";
 
         filters = Communicator::recv(_client_sockfd);
+
+        CapabilitySetter::set_required_caps();
         valid = this->are_filters_valid(filters, filter_error);
+        CapabilitySetter::clear_required_caps();
 
         if (!valid)
         {
