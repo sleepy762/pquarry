@@ -224,6 +224,7 @@ void LocalSniffer::start_sniffer()
     config.set_filter(this->get_filters());
     config.set_immediate_mode(true);
 
+    CapabilitySetter::set_required_caps();
     // The sniffer is allocated on the heap because we want to access the object in a separate function
     // see LocalSniffer::sniffer_interrupt
     _sniffer = new Sniffer(this->_local_interface, config);
@@ -233,6 +234,8 @@ void LocalSniffer::start_sniffer()
 
     // Starts the sniffer
     _sniffer->sniff_loop(callback);
+    
+    CapabilitySetter::clear_required_caps();
 }
 
 void LocalSniffer::connect_to_remote_sniffer()
