@@ -12,7 +12,9 @@ set(SERVER_NAME "${PROJECT_NAME}Server")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -pedantic")
-set(CMAKE_EXE_LINKER_FLAGS "-ltins -lcap") # Link with libtins and libcap
+set(CMAKE_EXE_LINKER_FLAGS "-ltins -lcap -lssl -lcrypto") # Link with libtins, libcap and openssl
+
+find_package(OpenSSL REQUIRED)
 
 # Directory of code that both the client and server use
 aux_source_directory("common/src" common_src)

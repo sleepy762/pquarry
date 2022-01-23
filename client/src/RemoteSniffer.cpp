@@ -44,7 +44,8 @@ void RemoteSniffer::connect()
     {
         throw std::runtime_error("Connection failed.");
     }
-    this->_communicator = new Communicator(_server_sockfd);
+
+    this->_communicator = new Communicator(_server_sockfd, TLS_client_method(), "./clientCert.pem", "./clientKey.pem");
     this->_connect_succeeded = true;
 }
 

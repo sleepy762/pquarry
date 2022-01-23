@@ -70,6 +70,9 @@ void NetscoutServer::start()
         throw std::runtime_error("Error while setting up listener.");
     }
 
+    // If the client disconnects from the SSL socket, the server will terminate because of a broken pipe
+    SignalHandler::set_signal_handler(SIGPIPE, SIG_IGN, 0);
+
     std::cout << "Listening on port " << this->_port << '\n';
     // Accept connections until server is closed
     while (true)
@@ -108,7 +111,8 @@ void NetscoutServer::accept()
     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip_address, sizeof(client_ip_address));
     uint16_t client_port = ntohs(client_addr.sin_port);
 
-    _communicator = new Communicator(_client_sockfd);
+    _communicator = new Communicator(_client_sockfd, TLS_server_method(), "./serverCert.pem", "./serverKey.pem");
+
     std::cout << "Client connected at " << client_ip_address << ":" << client_port << '\n';
 
     this->update_interface_list();

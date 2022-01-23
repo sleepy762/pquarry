@@ -12,6 +12,7 @@
 #include "Communicator.h"
 #include "Serializer.h"
 #include "CapabilitySetter.h"
+#include "SignalHandler.h"
 
 using namespace Tins;
 

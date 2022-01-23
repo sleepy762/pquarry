@@ -19,7 +19,7 @@ void CapabilitySetter::initialize_caps()
     }
 
     // Set only the required capabilities in the permitted section
-    if (cap_set_flag(caps, CAP_PERMITTED, 1, _cap_list, CAP_SET) == -1)
+    if (cap_set_flag(caps, CAP_PERMITTED, REQUIRED_CAPS_AMOUNT, _cap_list, CAP_SET) == -1)
     {
         throw std::runtime_error("Call to cap_set_flag failed.");
     }
@@ -39,7 +39,7 @@ void CapabilitySetter::set_required_caps()
         throw std::runtime_error("Failed to get process capabilities.");
     }
 
-    if (cap_set_flag(caps, CAP_EFFECTIVE, 1, _cap_list, CAP_SET) == -1)
+    if (cap_set_flag(caps, CAP_EFFECTIVE, REQUIRED_CAPS_AMOUNT, _cap_list, CAP_SET) == -1)
     {
         throw std::runtime_error("Call to cap_set_flag failed.");
     }
@@ -59,7 +59,7 @@ void CapabilitySetter::clear_required_caps()
         throw std::runtime_error("Failed to get process capabilities.");
     }
 
-    if (cap_set_flag(caps, CAP_EFFECTIVE, 1, _cap_list, CAP_CLEAR) == -1)
+    if (cap_set_flag(caps, CAP_EFFECTIVE, REQUIRED_CAPS_AMOUNT, _cap_list, CAP_CLEAR) == -1)
     {
         throw std::runtime_error("Call to cap_set_flag failed.");
     }
