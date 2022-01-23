@@ -22,6 +22,8 @@ using interface_ip_pair = std::pair<std::string, std::string>;
 class NetscoutServer
 {
 private:
+    static Communicator* _communicator;
+    
     // Server related members
     uint16_t _port;
     int32_t _server_sockfd;

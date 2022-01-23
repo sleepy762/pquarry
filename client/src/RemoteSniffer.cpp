@@ -14,11 +14,13 @@ RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
 
     this->_connect_succeeded = false;
     this->_sniffer_configured = false;
+    this->_communicator = nullptr;
 }
 
 RemoteSniffer::~RemoteSniffer()
 {
     close(_server_sockfd);
+    delete this->_communicator;
 }
 
 void RemoteSniffer::start()
@@ -42,6 +44,7 @@ void RemoteSniffer::connect()
     {
         throw std::runtime_error("Connection failed.");
     }
+    this->_communicator = new Communicator(_server_sockfd);
     this->_connect_succeeded = true;
 }
 
@@ -59,7 +62,7 @@ void RemoteSniffer::configure_sniffer()
     std::string response = "";
     while (!configuration_finished)
     {
-        std::string server_msg = Communicator::recv(_server_sockfd);
+        std::string server_msg = this->_communicator->recv();
         std::cout << server_msg << '\n';
 
         // Check if the substring "Invalid" is in the server_msg
@@ -82,7 +85,7 @@ void RemoteSniffer::configure_sniffer()
         if (!configuration_finished)
         {
             response = RemoteSniffer::get_nonempty_line();
-            Communicator::send(_server_sockfd, response);
+            this->_communicator->send(response);
         }
     }
     this->_sniffer_configured = true;
@@ -109,7 +112,7 @@ void RemoteSniffer::packet_receiver()
     std::string data_buffer = "";
     while (true)
     {
-        data_buffer += Communicator::recv(_server_sockfd);
+        data_buffer += this->_communicator->recv();
         bool partial_data_flag = false;
 
         while (data_buffer.size() > 0)
