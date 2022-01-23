@@ -13,6 +13,13 @@ void Communicator::shutdown_ssl()
     SSL_free(this->_cSSL);
 }
 
+bool Communicator::are_pkey_and_cert_readable(const char* cert_path, const char* pkey_path)
+{
+    std::ifstream cert_f(cert_path);
+    std::ifstream pkey_f(pkey_path);
+    return (cert_f.good() && pkey_f.good());
+}
+
 Communicator::Communicator(int comm_socket, const SSL_METHOD* method, const char* cert_path, const char* pkey_path)
 {
     this->_comm_socket = comm_socket;
@@ -24,7 +31,10 @@ Communicator::Communicator(int comm_socket, const SSL_METHOD* method, const char
         throw std::runtime_error("Failed to create SSL context.");
     }
 
-    this->create_certificate(cert_path, pkey_path);
+    if (!this->are_pkey_and_cert_readable(cert_path, pkey_path))
+    {
+        this->create_certificate(cert_path, pkey_path);
+    }
 
     if (SSL_CTX_use_certificate_file(this->_ssl_ctx, cert_path , SSL_FILETYPE_PEM) <= 0)
     {
@@ -73,14 +83,21 @@ Communicator::~Communicator()
 
 void Communicator::create_certificate(const char* cert_path, const char* pkey_path)
 {
-    std::unique_ptr<EVP_PKEY, void(*)(EVP_PKEY*)> pkey = { EVP_PKEY_new(), EVP_PKEY_free };
+    std::cout << "Creating SSL certificate..." << '\n';
+
+    std::unique_ptr<EVP_PKEY, void(*)(EVP_PKEY*)> pkey { EVP_PKEY_new(), EVP_PKEY_free };
     if (pkey == NULL)
     {
         throw std::runtime_error("Failed to create a private key.");
     }
 
-    RSA* rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL);
-    if (rsa == NULL)
+    RSA* rsa = RSA_new();
+    std::unique_ptr<BIGNUM, void(*)(BIGNUM*)> bn { BN_new(), BN_free };
+    if (BN_set_word(bn.get(), RSA_F4) == 0)
+    {
+        throw std::runtime_error("Failed to set exponent.");
+    }
+    if (RSA_generate_key_ex(rsa, 2048, bn.get(), NULL) == 0)
     {
         throw std::runtime_error("Failed to generate RSA key.");
     }
@@ -89,7 +106,7 @@ void Communicator::create_certificate(const char* cert_path, const char* pkey_pa
         throw std::runtime_error("Failed to assign private key to RSA key.");
     }
 
-    std::unique_ptr<X509, void(*)(X509*)> x509 = { X509_new(), X509_free };
+    std::unique_ptr<X509, void(*)(X509*)> x509 { X509_new(), X509_free };
     if (x509 == NULL)
     {
         throw std::runtime_error("Failed to create X509 certificate.");
@@ -103,7 +120,7 @@ void Communicator::create_certificate(const char* cert_path, const char* pkey_pa
     {
         throw std::runtime_error("Failed to set certificate valid date.");
     }
-    if (X509_gmtime_adj(X509_get_notAfter(x509.get()), 300) == NULL)
+    if (X509_gmtime_adj(X509_get_notAfter(x509.get()), 30) == NULL)
     {
         throw std::runtime_error("Failed to set certificate valid date.");
     }
@@ -145,7 +162,6 @@ void Communicator::create_certificate(const char* cert_path, const char* pkey_pa
     FILE* f = fopen(pkey_path, "wb");
     if (f == NULL)
     {
-        std::cout << std::strerror(errno) << '\n';
         throw std::runtime_error("Failed to open private key file.");
     }
     if (PEM_write_PrivateKey(f, pkey.get(), NULL, NULL, 0, NULL, NULL) == 0)

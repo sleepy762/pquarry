@@ -3,6 +3,8 @@
 #include <sys/socket.h>
 #include <stdexcept>
 #include <memory>
+#include <fstream>
+#include <iostream>
 
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
@@ -10,9 +12,6 @@
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/pem.h>
-#include <cerrno>
-#include <cstring>
-#include <iostream>
 
 #define MAX_RECV_BUF_SIZE (1024)
 
@@ -29,6 +28,7 @@ private:
 
     void initialize_ssl();
     void shutdown_ssl();
+    bool are_pkey_and_cert_readable(const char* cert_path, const char* pkey_path);
     void create_certificate(const char* cert_path, const char* pkey_path);
     
 public:
