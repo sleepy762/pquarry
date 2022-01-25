@@ -20,7 +20,10 @@ RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
 RemoteSniffer::~RemoteSniffer()
 {
     close(_server_sockfd);
-    delete this->_communicator;
+    if (this->_communicator != nullptr)
+    {
+        delete this->_communicator;
+    }
 }
 
 void RemoteSniffer::start()

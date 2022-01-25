@@ -2,8 +2,6 @@ Version 1.4.0 -- 25/1/2022
 - New dependency: openssl.
 - The client communicates with the server using OpenSSL. The communication is encrypted with the latest TLS protocol. Old client versions are incompatible with the server version 1.2.0+.
 - Added temporary workaround to fix inability to export pcap files into user directories when running as root.
-- Moved shared code files into a directory named 'common'.
-- Added a temporary capability to the CapabilitySetter (CAP_DAC_OVERRIDE).
 
 Version 1.3.0 -- 19/1/2022
 - New dependency: libcap.

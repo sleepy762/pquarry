@@ -2,7 +2,6 @@
 #include "LocalSniffer.h"
 #include "NetscoutMenu.h"
 #include "CapabilitySetter.h"
-#include <sstream>
 
 int main(int argc, char** argv)
 {

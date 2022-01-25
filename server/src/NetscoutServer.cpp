@@ -77,7 +77,7 @@ void NetscoutServer::start()
     // Accept connections until server is closed
     while (true)
     {
-        // If an exception occurrs then the communicator won't be freed in the accept method
+        // If an exception occurs then the communicator won't be freed in the accept method
         if (_communicator != nullptr)
         {
             delete _communicator;
