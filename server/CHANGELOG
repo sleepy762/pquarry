@@ -1,3 +1,7 @@
+Version 1.2.0 -- 25/1/2022
+- New dependency: openssl.
+- The server communicates with the client using OpenSSL. The communication is encrypted with the latest TLS protocol. Old server versions are incompatible with the client version 1.4.0+.
+
 Version 1.1.0 -- 19/1/2022
 - New dependency: libcap.
 - Root permissions are reduced during initialization, and when the sniffer is not active. The program only sets the CAP_NET_RAW permission when it's required. 

@@ -2,7 +2,8 @@
 
 // List of the required capabilities for the program
 const cap_value_t CapabilitySetter::_cap_list[REQUIRED_CAPS_AMOUNT] = 
-{ CAP_NET_RAW };
+{ CAP_NET_RAW, CAP_DAC_OVERRIDE };
+// CAP_DAC_OVERRIDE is used as a temporary workaround
 
 void CapabilitySetter::initialize_caps()
 {
@@ -19,7 +20,7 @@ void CapabilitySetter::initialize_caps()
     }
 
     // Set only the required capabilities in the permitted section
-    if (cap_set_flag(caps, CAP_PERMITTED, 1, _cap_list, CAP_SET) == -1)
+    if (cap_set_flag(caps, CAP_PERMITTED, REQUIRED_CAPS_AMOUNT, _cap_list, CAP_SET) == -1)
     {
         throw std::runtime_error("Call to cap_set_flag failed.");
     }
@@ -39,7 +40,7 @@ void CapabilitySetter::set_required_caps()
         throw std::runtime_error("Failed to get process capabilities.");
     }
 
-    if (cap_set_flag(caps, CAP_EFFECTIVE, 1, _cap_list, CAP_SET) == -1)
+    if (cap_set_flag(caps, CAP_EFFECTIVE, REQUIRED_CAPS_AMOUNT, _cap_list, CAP_SET) == -1)
     {
         throw std::runtime_error("Call to cap_set_flag failed.");
     }
@@ -59,7 +60,7 @@ void CapabilitySetter::clear_required_caps()
         throw std::runtime_error("Failed to get process capabilities.");
     }
 
-    if (cap_set_flag(caps, CAP_EFFECTIVE, 1, _cap_list, CAP_CLEAR) == -1)
+    if (cap_set_flag(caps, CAP_EFFECTIVE, REQUIRED_CAPS_AMOUNT, _cap_list, CAP_CLEAR) == -1)
     {
         throw std::runtime_error("Call to cap_set_flag failed.");
     }

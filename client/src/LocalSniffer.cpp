@@ -201,11 +201,6 @@ void LocalSniffer::sniffer_interrupt(int)
 
 void LocalSniffer::start_sniffer()
 {
-    if (geteuid() != 0)
-    {
-        throw std::runtime_error("This feature requires root access in order to work.");
-    }
-    
     // Failsafe
     if (_sniffer != nullptr)
     {
@@ -297,12 +292,15 @@ void LocalSniffer::export_packets() const
         filename += PCAP_FILE_EXTENSION;
     }
 
+    // Temporary workaround with capabilities
+    if (geteuid() == 0) CapabilitySetter::set_required_caps();
     // Writes the packets into a pcap file
     PacketWriter writer(filename, DataLinkType<EthernetII>());
     for (auto it = _saved_packets.begin(); it != _saved_packets.end(); it++)
     {
         writer.write(*it);
     }
+    if (geteuid() == 0) CapabilitySetter::clear_required_caps();
 
     const std::string msg = std::to_string(_saved_packets.size()) + " packets were written to " + filename;
     NetscoutMenu::print_success_msg(msg.c_str());

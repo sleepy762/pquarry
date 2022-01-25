@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <stdexcept>
 
-#define REQUIRED_CAPS_AMOUNT (1)
+#define REQUIRED_CAPS_AMOUNT (2)
 
 class CapabilitySetter
 {

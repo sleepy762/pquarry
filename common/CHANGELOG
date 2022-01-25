@@ -1,0 +1,4 @@
+-- 25/1/2022
+- Moved shared code files into a directory named 'common'.
+- Added a temporary capability to the CapabilitySetter (CAP_DAC_OVERRIDE).
+- The communicator class is now used as a non-static object.
