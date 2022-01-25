@@ -20,15 +20,15 @@ int main(int argc, char** argv)
     }
 
     // Reduce root permissions
-    // try
-    // {
-    //     CapabilitySetter::initialize_caps();
-    // }
-    // catch (const std::exception& e)
-    // {
-    //     std::cerr << e.what() << '\n';
-    //     exit(1);
-    // }
+    try
+    {
+        CapabilitySetter::initialize_caps();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        exit(1);
+    }
 
     // Converting string to integer to get the port
     std::stringstream strVal;

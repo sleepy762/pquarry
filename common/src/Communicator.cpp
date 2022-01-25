@@ -120,7 +120,8 @@ void Communicator::create_certificate(const char* cert_path, const char* pkey_pa
     {
         throw std::runtime_error("Failed to set certificate valid date.");
     }
-    if (X509_gmtime_adj(X509_get_notAfter(x509.get()), 30) == NULL)
+    // Valid for 365 days
+    if (X509_gmtime_adj(X509_get_notAfter(x509.get()), 31536000L) == NULL)
     {
         throw std::runtime_error("Failed to set certificate valid date.");
     }
