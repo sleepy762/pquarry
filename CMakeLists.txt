@@ -16,7 +16,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-ltins -lcap -lssl -lcrypto") # Link with libtins, l
 
 # Define permissions for the executables
 set(PROGRAM_PERMISSIONS
-    
+    OWNER_WRITE OWNER_READ OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
     SETUID)
