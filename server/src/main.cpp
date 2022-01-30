@@ -7,11 +7,6 @@
 
 int main(int argc, char** argv)
 {
-    if (geteuid() != 0)
-    {
-        std::cerr << "This program must be run as root in order to work." << std::endl;
-        return 1;
-    }
     // We expect a port to be passed as an argument
     if (argc < 2)
     {
@@ -20,13 +15,22 @@ int main(int argc, char** argv)
     }
 
     // Reduce root permissions
-    try
+    if (geteuid() == 0)
     {
-        CapabilitySetter::initialize_caps();
+        try
+        {
+            CapabilitySetter::initialize_caps();
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            exit(1);
+        }
+        setuid(getuid());
     }
-    catch (const std::exception& e)
+    else
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "The server must be run with the setuid file permission." << '\n';
         exit(1);
     }
 

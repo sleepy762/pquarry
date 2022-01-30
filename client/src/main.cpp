@@ -17,6 +17,7 @@ int main(int argc, char** argv)
             std::cerr << e.what() << '\n';
             exit(1);
         }
+        setuid(getuid());
     }
     
     LocalSniffer local_sniffer = LocalSniffer::instantiate_with_args(argc, argv);

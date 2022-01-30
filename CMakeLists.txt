@@ -14,6 +14,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -pedantic")
 set(CMAKE_EXE_LINKER_FLAGS "-ltins -lcap -lssl -lcrypto") # Link with libtins, libcap and openssl
 
+# Define permissions for the executables
+set(PROGRAM_PERMISSIONS
+    OWNER_WRITE OWNER_READ OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+    SETUID)
+
 find_package(OpenSSL REQUIRED)
 
 # Directory of code that both the client and server use
@@ -39,3 +46,15 @@ target_include_directories(${SERVER_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/server/include
     ${CMAKE_CURRENT_SOURCE_DIR}/common/include
 )
+
+# make uninstall
+add_custom_target("uninstall" COMMENT "Uninstall installed files")
+add_custom_command(
+    TARGET "uninstall"
+    POST_BUILD
+    COMMENT "Uninstall files with install_manifest.txt"
+    COMMAND xargs rm -vf < install_manifest.txt || echo Nothing in
+            install_manifest.txt to be uninstalled!
+)
+
+install(TARGETS ${CLIENT_NAME} ${SERVER_NAME} PERMISSIONS ${PROGRAM_PERMISSIONS} SETUID)
