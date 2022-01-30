@@ -48,11 +48,13 @@ void RemoteSniffer::connect()
         throw std::runtime_error("Connection failed.");
     }
 
-    // Set capabilities to create files in the user directory only if running as root
-    // Temporary workaround with capabilities
-    if (geteuid() == 0) CapabilitySetter::set_required_caps();
-    this->_communicator = new Communicator(_server_sockfd, TLS_client_method(), "./.clientCert.pem", "./.clientKey.pem");
-    if (geteuid() == 0) CapabilitySetter::clear_required_caps();
+    std::string home_path = getenv("HOME");
+    std::string cert_path = home_path + "/.clientCert.pem";
+    std::string pkey_path = home_path + "/.clientKey.pem";
+
+    CapabilitySetter::set_required_caps();
+    this->_communicator = new Communicator(_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str());
+    CapabilitySetter::clear_required_caps();
 
     this->_connect_succeeded = true;
 }

@@ -2,8 +2,7 @@
 
 // List of the required capabilities for the program
 const cap_value_t CapabilitySetter::_cap_list[REQUIRED_CAPS_AMOUNT] = 
-{ CAP_NET_RAW, CAP_DAC_OVERRIDE };
-// CAP_DAC_OVERRIDE is used as a temporary workaround
+{ CAP_NET_RAW };
 
 void CapabilitySetter::initialize_caps()
 {

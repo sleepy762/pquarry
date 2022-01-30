@@ -111,8 +111,12 @@ void NetscoutServer::accept()
     inet_ntop(AF_INET, &client_addr.sin_addr, client_ip_address, sizeof(client_ip_address));
     uint16_t client_port = ntohs(client_addr.sin_port);
 
+    std::string home_path = getenv("HOME");
+    std::string cert_path = home_path + "/.serverCert.pem";
+    std::string pkey_path = home_path + "/.serverKey.pem";
+
     CapabilitySetter::set_required_caps();
-    _communicator = new Communicator(_client_sockfd, TLS_server_method(), "./.serverCert.pem", "./.serverKey.pem");
+    _communicator = new Communicator(_client_sockfd, TLS_server_method(), cert_path.c_str(), pkey_path.c_str());
     CapabilitySetter::clear_required_caps();
 
     std::cout << "Client connected at " << client_ip_address << ":" << client_port << '\n';
