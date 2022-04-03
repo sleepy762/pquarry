@@ -43,7 +43,7 @@ private:
 
     void export_packets() const;
 
-    void clear_saved_packets();
+    void clear_saved_packets() const;
 
     void see_information() const;
 

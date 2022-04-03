@@ -141,7 +141,7 @@ void NetscoutMenu::menu_loop()
     } while (choice != EXIT_OPT);
 }
 
-void NetscoutMenu::clear_saved_packets()
+void NetscoutMenu::clear_saved_packets() const
 {
     int amountOfPackets = saved_packets.size();
 
