@@ -3,7 +3,7 @@
 #include "NetscoutMenu.h"
 #include "CapabilitySetter.h"
 
-int main()
+int main(int argc, char** argv)
 {
     // Reduce root permissions
     if (geteuid() == 0)
@@ -20,8 +20,17 @@ int main()
         setuid(getuid());
     }
     
-    NetscoutMenu menu = NetscoutMenu();
-    menu.menu_loop();
+    // I want to keep NetscoutMenu on the stack so I'm just doing it this way
+    if (argc > 1)
+    {
+        NetscoutMenu menu = NetscoutMenu::instantiate_with_args(argc, argv);
+        menu.menu_loop();
+    }
+    else
+    {
+        NetscoutMenu menu = NetscoutMenu();
+        menu.menu_loop();
+    }
 
     return 0;
 }

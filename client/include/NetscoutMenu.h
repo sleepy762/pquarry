@@ -54,7 +54,10 @@ private:
 
 public:
     NetscoutMenu();
+    NetscoutMenu(std::string interface, std::string filters);
     ~NetscoutMenu();
+
+    static NetscoutMenu instantiate_with_args(int argc, char** argv);
 
     template <typename T>
     static T get_value();

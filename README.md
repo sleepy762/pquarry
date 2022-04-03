@@ -21,4 +21,4 @@ Two executables will be created, `NetScout`(client) and `NetScoutServer`(server)
 
 A readme file that explains the usage of each executable is available in the respective directory.
 
-To uninstall, simply run `sudo make uninstall`.
+To uninstall, run `sudo make uninstall`.

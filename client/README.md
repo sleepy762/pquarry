@@ -1,4 +1,24 @@
-# NetScout Client Usage
+# NetScout Client
+
+## Running
+
+The client accepts arguments, both are optional:
+
+- The first argument will fill the `interface` field.
+- The second argument and beyond will be concatenated and will fill the `filters` field.
+This means that it is possible to run the executable like this, for example:
+```
+NetScout enp3s0 port 443
+```
+And like this
+```
+NetScout enp3s0 "port 443"
+```
+Both lines have the same effect (`enp3s0` is the interface and `port 443` is the filter).
+
+Both the interface and filters can be set and changed in the menu during runtime.
+
+## Usage
 
 #### Local Sniffing
 

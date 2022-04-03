@@ -30,7 +30,40 @@ NetscoutMenu::NetscoutMenu()
     this->_local_filters = "";
 }
 
+NetscoutMenu::NetscoutMenu(std::string interface, std::string filters)
+{
+    this->_local_interface = interface;
+    this->_local_filters = filters;
+}
+
 NetscoutMenu::~NetscoutMenu() {}
+
+NetscoutMenu NetscoutMenu::instantiate_with_args(int argc, char** argv)
+{
+    std::string interface = "";
+    std::string filters = "";
+
+    // If arguments were passed, we use the 2nd arg as the interface and the 3rd+ as the filters
+    if (argc >= 2)
+    {
+        interface = argv[1];
+        if (argc >= 3)
+        {
+            // Concatenate the rest of the arguments into filters (starts at argv[2])
+            // Alternatively, the user can simply put the filters in quotes
+            for (int i = 2; i < argc; i++)
+            {
+                filters += argv[i];
+                if (i + 1 != argc) // Add spaces in between args
+                {
+                    filters += ' ';
+                }
+            }
+        }
+    }
+    return NetscoutMenu(interface, filters);
+
+}
 
 void NetscoutMenu::print_success_msg(const char* msg)
 {
