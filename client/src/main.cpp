@@ -1,9 +1,9 @@
 #include <unistd.h>
-#include "LocalSniffer.h"
+#include <iostream>
 #include "NetscoutMenu.h"
 #include "CapabilitySetter.h"
 
-int main(int argc, char** argv)
+int main()
 {
     // Reduce root permissions
     if (geteuid() == 0)
@@ -20,8 +20,8 @@ int main(int argc, char** argv)
         setuid(getuid());
     }
     
-    LocalSniffer local_sniffer = LocalSniffer::instantiate_with_args(argc, argv);
-    local_sniffer.menu_loop();
+    NetscoutMenu menu = NetscoutMenu();
+    menu.menu_loop();
 
     return 0;
 }

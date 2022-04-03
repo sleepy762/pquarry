@@ -57,4 +57,4 @@ add_custom_command(
             install_manifest.txt to be uninstalled!
 )
 
-install(TARGETS ${CLIENT_NAME} ${SERVER_NAME} PERMISSIONS ${PROGRAM_PERMISSIONS} SETUID)
+install(TARGETS ${CLIENT_NAME} ${SERVER_NAME} PERMISSIONS ${PROGRAM_PERMISSIONS})

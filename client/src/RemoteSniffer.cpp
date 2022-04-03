@@ -1,4 +1,13 @@
 #include "RemoteSniffer.h"
+#include "callback.h"
+#include <sys/socket.h>
+#include <unistd.h>
+#include <iostream>
+#include "Deserializer.h"
+#include "CapabilitySetter.h"
+#include "SignalHandler.h"
+
+#define INVALID_SUBSTR ("Invalid")
 
 int32_t RemoteSniffer::_server_sockfd = INVALID_SOCKET;
 
@@ -26,7 +35,7 @@ RemoteSniffer::~RemoteSniffer()
     }
 }
 
-void RemoteSniffer::start()
+void RemoteSniffer::start_sniffer()
 {
     this->connect();
     this->configure_sniffer();
@@ -137,7 +146,7 @@ void RemoteSniffer::packet_receiver()
 
             EthernetII eth_pdu = EthernetII((const uint8_t*)single_packet_data.c_str(), single_packet_data.size());
             Packet packet = Packet(eth_pdu);
-            LocalSniffer::callback(packet);
+            callback(packet);
         }
     }
 }

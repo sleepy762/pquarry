@@ -1,4 +1,5 @@
 #include "Deserializer.h"
+#include <sstream>
 
 std::string Deserializer::deserialize_data(std::string& data, bool& partial_data_flag)
 {

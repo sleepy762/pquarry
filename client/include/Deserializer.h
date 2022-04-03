@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <sstream>
 
 #define PACKET_SIZE_LENGTH (5)
 

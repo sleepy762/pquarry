@@ -1,16 +1,9 @@
 #pragma once
 #include <tins/tins.h>
-#include <string>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <iostream>
 #include "Communicator.h"
-#include "LocalSniffer.h"
-#include "Deserializer.h"
+#include <string>
 
 using namespace Tins;
-
-#define INVALID_SUBSTR ("Invalid")
 
 class RemoteSniffer
 {
@@ -38,10 +31,11 @@ private:
     void connect();
     void configure_sniffer();
     void packet_receiver();
+    void start();
 
 public:
     RemoteSniffer(std::string ip, uint16_t port);
     ~RemoteSniffer();
 
-    void start();
+    void start_sniffer();
 };

@@ -1,9 +1,7 @@
 #pragma once
 #include <tins/tins.h>
-#include <iostream>
 #include <sstream>
 #include "ProtocolDeterminer.h"
-#include "ColorPicker.h"
 
 using namespace Tins;
 

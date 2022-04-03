@@ -51,7 +51,7 @@ protocol_properties PacketPrinter::get_protocol_properties(PDU::PDUType currPDUT
 
     if (properties.protocolColor == nullptr)
     {
-        properties.protocolColor = ColorPicker::get_color_by_pdu_type(currPDUType);
+        properties.protocolColor = ProtocolDeterminer::get_color_by_pdu_type(currPDUType);
     }
 
     return properties;
