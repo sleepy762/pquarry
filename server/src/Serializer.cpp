@@ -1,4 +1,8 @@
 #include "Serializer.h"
+#include <sstream>
+#include <iomanip>
+
+#define PACKET_SIZE_LENGTH (5)
 
 std::string Serializer::serialize_data(const byte_array& data)
 {

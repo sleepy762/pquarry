@@ -1,5 +1,6 @@
 -- 05/04/2022
 - Moved includes to the source files.
+- Fixed memory leak with SSL_CTX.
 
 -- 30/01/2022
 - Removed the temporary workaround with CAP_DAC_OVERRIDE.

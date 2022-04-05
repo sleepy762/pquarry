@@ -29,6 +29,7 @@ void Communicator::shutdown_ssl()
 {
     SSL_shutdown(this->_cSSL);
     SSL_free(this->_cSSL);
+    SSL_CTX_free(this->_ssl_ctx);
 }
 
 bool Communicator::are_pkey_and_cert_readable(const char* cert_path, const char* pkey_path)

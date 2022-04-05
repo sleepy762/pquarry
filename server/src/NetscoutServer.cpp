@@ -1,4 +1,17 @@
 #include "NetscoutServer.h"
+#include <sys/socket.h>
+#include <stdexcept>
+#include <unistd.h>
+#include <iostream>
+#include <vector>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <memory>
+#include "Serializer.h"
+#include "CapabilitySetter.h"
+#include "SignalHandler.h"
+
+#define NO_FILTERS_STR ("no")
 
 #define NS_SERVER_SSL_CERT_FILE ("/.nsServerCert.pem") 
 #define NS_SERVER_SSL_KEY_FILE ("/.nsServerKey.pem")

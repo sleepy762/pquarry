@@ -1,24 +1,11 @@
 #pragma once
 #include <tins/tins.h>
 #include <string>
-#include <sys/socket.h>
-#include <stdexcept>
-#include <unistd.h>
-#include <iostream>
-#include <vector>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <memory>
 #include "Communicator.h"
-#include "Serializer.h"
-#include "CapabilitySetter.h"
-#include "SignalHandler.h"
 
 using namespace Tins;
 
 using interface_ip_pair = std::pair<std::string, std::string>;
-
-#define NO_FILTERS_STR ("no")
 
 class NetscoutServer
 {
