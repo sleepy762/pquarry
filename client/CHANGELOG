@@ -1,4 +1,8 @@
-Version 1.5.0 -- 04/03/2022
+Version 1.5.1 -- 05/04/2022
+- Updated CMakeLists.txt to compile the common source files only once.
+- Returned command line args.
+
+Version 1.5.0 -- 03/04/2022
 - The code was rewritten.
 
 Version 1.4.1 -- 30/01/2022

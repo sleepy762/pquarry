@@ -1,4 +1,5 @@
 #include "SignalHandler.h"
+#include <signal.h>
 
 void SignalHandler::set_signal_handler(int sig, void(*handler_func)(int), int flags)
 {

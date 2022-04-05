@@ -1,5 +1,4 @@
 #pragma once
-#include <signal.h>
 
 class SignalHandler
 {

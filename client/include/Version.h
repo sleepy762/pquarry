@@ -1,4 +1,4 @@
 #pragma once
 
 // Client version
-#define CLIENT_VERSION ("1.5.0")
+#define CLIENT_VERSION ("1.5.1")

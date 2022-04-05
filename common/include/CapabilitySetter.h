@@ -1,8 +1,5 @@
 #pragma once
-#include <unistd.h>
 #include <sys/capability.h>
-#include <sys/types.h>
-#include <stdexcept>
 
 #define REQUIRED_CAPS_AMOUNT (1)
 

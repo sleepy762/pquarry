@@ -1,4 +1,22 @@
 #include "Communicator.h"
+#include <sys/socket.h>
+#include <stdexcept>
+#include <memory>
+#include <fstream>
+#include <iostream>
+
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/rsa.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+
+#define MAX_RECV_BUF_SIZE (1024)
+
+#define SSL_CERT_COUNTRY_CODE ("IL")
+#define SSL_CERT_ORGANIZATION ("Very-Real-Company")
+#define SSL_CERT_COMMON_NAME ("localhost")
+
 
 void Communicator::initialize_ssl()
 {

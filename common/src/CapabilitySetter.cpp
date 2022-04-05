@@ -1,4 +1,7 @@
 #include "CapabilitySetter.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <stdexcept>
 
 // List of the required capabilities for the program
 const cap_value_t CapabilitySetter::_cap_list[REQUIRED_CAPS_AMOUNT] = 
