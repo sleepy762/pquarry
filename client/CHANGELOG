@@ -1,6 +1,7 @@
 Version 1.5.1 -- 05/04/2022
 - Updated CMakeLists.txt to compile the common source files only once.
 - Returned command line args.
+- Changed the name of the certificate and private key files.
 
 Version 1.5.0 -- 03/04/2022
 - The code was rewritten.

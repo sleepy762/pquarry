@@ -21,6 +21,9 @@ void LocalSniffer::sniffer_interrupt(int)
 
     delete _sniffer;
     _sniffer = nullptr;
+    
+    // We want to disable the signal handler when we are not sniffing
+    SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
 }
 
 void LocalSniffer::start_sniffer()
@@ -36,7 +39,7 @@ void LocalSniffer::start_sniffer()
     // Instantiate the config to add our pcap filters
     SnifferConfiguration config;
     config.set_filter(this->_filters);
-    config.set_immediate_mode(true);
+    config.set_immediate_mode(true); // Show packets immediately instead of in waves
 
     CapabilitySetter::set_required_caps(CAP_SET);
     // The sniffer is allocated on the heap because we want to access the object in a separate function
@@ -48,8 +51,6 @@ void LocalSniffer::start_sniffer()
 
     // Starts the sniffer
     _sniffer->sniff_loop(callback);
-    
-    // We want to disable the signal handler when we are not sniffing
-    SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
+
     CapabilitySetter::set_required_caps(CAP_CLEAR);
 }

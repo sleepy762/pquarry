@@ -1,5 +1,8 @@
 #include "NetscoutServer.h"
 
+#define NS_SERVER_SSL_CERT_FILE ("/.nsServerCert.pem") 
+#define NS_SERVER_SSL_KEY_FILE ("/.nsServerKey.pem")
+
 int32_t NetscoutServer::_client_sockfd = INVALID_SOCKET;
 Communicator* NetscoutServer::_communicator = nullptr;
 
@@ -112,8 +115,8 @@ void NetscoutServer::accept()
     uint16_t client_port = ntohs(client_addr.sin_port);
 
     std::string home_path = getenv("HOME");
-    std::string cert_path = home_path + "/.serverCert.pem";
-    std::string pkey_path = home_path + "/.serverKey.pem";
+    std::string cert_path = home_path + NS_SERVER_SSL_CERT_FILE;
+    std::string pkey_path = home_path + NS_SERVER_SSL_KEY_FILE;
 
     CapabilitySetter::set_required_caps(CAP_SET);
     _communicator = new Communicator(_client_sockfd, TLS_server_method(), cert_path.c_str(), pkey_path.c_str());

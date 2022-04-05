@@ -9,6 +9,9 @@
 
 #define INVALID_SUBSTR ("Invalid")
 
+#define NS_CLIENT_SSL_CERT_FILE ("/.nsClientCert.pem")
+#define NS_CLIENT_SSL_KEY_FILE ("/.nsClientKey.pem")
+
 int32_t RemoteSniffer::_server_sockfd = INVALID_SOCKET;
 
 RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
@@ -58,8 +61,8 @@ void RemoteSniffer::connect()
     }
 
     std::string home_path = getenv("HOME");
-    std::string cert_path = home_path + "/.clientCert.pem";
-    std::string pkey_path = home_path + "/.clientKey.pem";
+    std::string cert_path = home_path + NS_CLIENT_SSL_CERT_FILE;
+    std::string pkey_path = home_path + NS_CLIENT_SSL_KEY_FILE;
 
     CapabilitySetter::set_required_caps(CAP_SET);
     this->_communicator = new Communicator(_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str());
@@ -86,7 +89,6 @@ void RemoteSniffer::configure_sniffer()
         std::cout << server_msg << '\n';
 
         // Check if the substring "Invalid" is in the server_msg
-        // ideally I should make a protocol for this server to client communication (later)
         if (server_msg.substr(0, server_msg.find(' ')) != INVALID_SUBSTR && response != "")
         {
             switch (interface_selected)
@@ -122,7 +124,7 @@ void RemoteSniffer::packet_receiver()
         throw std::runtime_error("RemoteSniffer::configure_sniffer() wasn't called.");
     }
 
-    // Close the socket and return to the main menu upon interrupt
+    // Set a handler to close the socket and return to the main menu upon interrupt
     SignalHandler::set_signal_handler(SIGINT, RemoteSniffer::remote_sniffer_interrupt, 0);
     
     std::cout << '\n' << "Starting remote sniffer at " << this->_ip << ':' << this->_port << '\n';

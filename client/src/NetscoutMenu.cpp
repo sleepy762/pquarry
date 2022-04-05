@@ -120,7 +120,7 @@ std::vector<interface_ip_pair> NetscoutMenu::get_interface_list() const
 
 void NetscoutMenu::menu_loop()
 {
-    int choice;
+    int32_t choice;
     do
     {
         this->print_main_menu();
@@ -178,6 +178,7 @@ void NetscoutMenu::clear_saved_packets() const
 {
     int amountOfPackets = saved_packets.size();
 
+    // The clear() method calls the destructor for each packet
     saved_packets.clear();
     packet_number = 1;
 
@@ -205,9 +206,9 @@ void NetscoutMenu::export_packets() const
     // If the filename is shorter than the extension, also append the extension
     size_t filenameLength = filename.length();
     size_t extensionLength = std::string(PCAP_FILE_EXTENSION).length();
+
     if (filenameLength < extensionLength
-        || (filenameLength > extensionLength 
-        && filename.substr(filenameLength - extensionLength) != PCAP_FILE_EXTENSION))
+        || filename.substr(filenameLength - extensionLength) != PCAP_FILE_EXTENSION)
     {
         filename += PCAP_FILE_EXTENSION;
     }

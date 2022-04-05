@@ -21,6 +21,7 @@ bool callback(const Packet& packet)
 
     std::unique_ptr<PDU> originalPDU(packet.pdu()->clone());
     // Gather data from all the protocols in the list of PDUs
+    // Each PDU in the chain has certain data that we might want
     PDU* inner = originalPDU.get();
     while (inner != nullptr)
     {
