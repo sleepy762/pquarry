@@ -61,9 +61,9 @@ void RemoteSniffer::connect()
     std::string cert_path = home_path + "/.clientCert.pem";
     std::string pkey_path = home_path + "/.clientKey.pem";
 
-    CapabilitySetter::set_required_caps();
+    CapabilitySetter::set_required_caps(CAP_SET);
     this->_communicator = new Communicator(_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str());
-    CapabilitySetter::clear_required_caps();
+    CapabilitySetter::set_required_caps(CAP_CLEAR);
 
     this->_connect_succeeded = true;
 }

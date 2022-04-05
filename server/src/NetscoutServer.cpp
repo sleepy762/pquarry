@@ -115,9 +115,9 @@ void NetscoutServer::accept()
     std::string cert_path = home_path + "/.serverCert.pem";
     std::string pkey_path = home_path + "/.serverKey.pem";
 
-    CapabilitySetter::set_required_caps();
+    CapabilitySetter::set_required_caps(CAP_SET);
     _communicator = new Communicator(_client_sockfd, TLS_server_method(), cert_path.c_str(), pkey_path.c_str());
-    CapabilitySetter::clear_required_caps();
+    CapabilitySetter::set_required_caps(CAP_CLEAR);
 
     std::cout << "Client connected at " << client_ip_address << ":" << client_port << '\n';
 
@@ -214,9 +214,9 @@ std::string NetscoutServer::get_filters_from_client() const
 
         filters = _communicator->recv();
 
-        CapabilitySetter::set_required_caps();
+        CapabilitySetter::set_required_caps(CAP_SET);
         valid = this->are_filters_valid(filters, filter_error);
-        CapabilitySetter::clear_required_caps();
+        CapabilitySetter::set_required_caps(CAP_CLEAR);
 
         if (!valid)
         {
@@ -259,13 +259,13 @@ void NetscoutServer::start_sniffer()
     config.set_filter(this->_chosen_filters);
     config.set_immediate_mode(true);
 
-    CapabilitySetter::set_required_caps();
+    CapabilitySetter::set_required_caps(CAP_SET);
 
     Sniffer sniffer = Sniffer(this->_chosen_interface, config);
     sniffer.set_extract_raw_pdus(true); // Don't interpret packets
     sniffer.sniff_loop(callback);
     
-    CapabilitySetter::clear_required_caps();
+    CapabilitySetter::set_required_caps(CAP_CLEAR);
 }
 
 bool NetscoutServer::callback(const Packet& packet)

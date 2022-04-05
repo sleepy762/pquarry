@@ -38,7 +38,7 @@ void LocalSniffer::start_sniffer()
     config.set_filter(this->_filters);
     config.set_immediate_mode(true);
 
-    CapabilitySetter::set_required_caps();
+    CapabilitySetter::set_required_caps(CAP_SET);
     // The sniffer is allocated on the heap because we want to access the object in a separate function
     // see LocalSniffer::sniffer_interrupt
     _sniffer = new Sniffer(this->_interface, config);
@@ -51,5 +51,5 @@ void LocalSniffer::start_sniffer()
     
     // We want to disable the signal handler when we are not sniffing
     SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
-    CapabilitySetter::clear_required_caps();
+    CapabilitySetter::set_required_caps(CAP_CLEAR);
 }

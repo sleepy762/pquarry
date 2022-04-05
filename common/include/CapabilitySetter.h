@@ -11,6 +11,5 @@ private:
 public:
     static void initialize_caps();
 
-    static void set_required_caps();
-    static void clear_required_caps();
+    static void set_required_caps(cap_flag_value_t flag);
 };

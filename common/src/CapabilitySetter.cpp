@@ -34,7 +34,7 @@ void CapabilitySetter::initialize_caps()
     cap_free(caps);
 }
 
-void CapabilitySetter::set_required_caps()
+void CapabilitySetter::set_required_caps(cap_flag_value_t flag)
 {
     cap_t caps = cap_get_proc();
     if (caps == NULL)
@@ -42,27 +42,7 @@ void CapabilitySetter::set_required_caps()
         throw std::runtime_error("Failed to get process capabilities.");
     }
 
-    if (cap_set_flag(caps, CAP_EFFECTIVE, REQUIRED_CAPS_AMOUNT, _cap_list, CAP_SET) == -1)
-    {
-        throw std::runtime_error("Call to cap_set_flag failed.");
-    }
-
-    if (cap_set_proc(caps) == -1)
-    {
-        throw std::runtime_error("Failed to update process capabilities.");
-    }
-    cap_free(caps);
-}
-
-void CapabilitySetter::clear_required_caps()
-{
-    cap_t caps = cap_get_proc();
-    if (caps == NULL)
-    {
-        throw std::runtime_error("Failed to get process capabilities.");
-    }
-
-    if (cap_set_flag(caps, CAP_EFFECTIVE, REQUIRED_CAPS_AMOUNT, _cap_list, CAP_CLEAR) == -1)
+    if (cap_set_flag(caps, CAP_EFFECTIVE, REQUIRED_CAPS_AMOUNT, _cap_list, flag) == -1)
     {
         throw std::runtime_error("Call to cap_set_flag failed.");
     }
