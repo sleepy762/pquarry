@@ -24,14 +24,14 @@ int main(int argc, char** argv)
         catch (const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            exit(1);
+            return 1;
         }
         setuid(getuid());
     }
     else
     {
         std::cerr << "The server must be run with the setuid file permission." << '\n';
-        exit(1);
+        return 1;
     }
 
     // Converting string to integer to get the port

@@ -26,6 +26,7 @@ NetscoutServer::~NetscoutServer()
     close(this->_server_sockfd);
 }
 
+// The interfaces are stored in a class member because multiple methods need to access it
 void NetscoutServer::update_interface_list()
 {
     this->_avail_interfaces.clear();
@@ -80,13 +81,6 @@ void NetscoutServer::start()
     // Accept connections until server is closed
     while (true)
     {
-        // If an exception occurs then the communicator won't be freed in the accept method
-        if (_communicator != nullptr)
-        {
-            delete _communicator;
-            _communicator = nullptr;
-        }
-
         try
         {
             this->accept();
@@ -94,6 +88,12 @@ void NetscoutServer::start()
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
+
+            if (_communicator != nullptr)
+            {
+                delete _communicator;
+                _communicator = nullptr;
+            }
         }
     }
 }
@@ -175,7 +175,7 @@ std::string NetscoutServer::get_formatted_interfaces_msg() const
 {
     std::string msg;
 
-    msg += "Please choose an interface to analyze:\n";
+    msg += "Please choose an interface to capture packets from:\n";
     for (auto it = _avail_interfaces.cbegin(); it != _avail_interfaces.cend(); it++)
     {
         msg += it->first;
@@ -208,7 +208,7 @@ std::string NetscoutServer::get_filters_from_client() const
 {
     bool valid;
     std::string filters = "";
-    std::string fmt_msg = "Enter pcap filters (write 'no' for no filters)";
+    std::string fmt_msg = "Enter pcap filters (write 'no' for no filters):";
 
     _communicator->send(fmt_msg);
     do

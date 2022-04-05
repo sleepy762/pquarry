@@ -14,7 +14,6 @@ private:
     std::string _interface;
     std::string _filters;
 
-    // These static members are members which are used by the static functions below
     static Sniffer* _sniffer;
     static void sniffer_interrupt(int);
 
