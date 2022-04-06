@@ -14,7 +14,7 @@ private:
     std::string _interface;
     std::string _filters;
 
-    static Sniffer* _sniffer;
+    static Sniffer* _sniffer_ptr;
     static void sniffer_interrupt(int);
 
 public:
