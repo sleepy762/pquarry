@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     std::cout << "Starting NetScout Server Version " << SERVER_VERSION << '\n';
     try
     {
-        NetscoutServer server = NetscoutServer(port);
+        NetscoutServer server(port);
         server.start();
     }
     catch(const std::exception& e)

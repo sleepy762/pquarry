@@ -35,6 +35,7 @@ private:
     void start();
 
 public:
+    RemoteSniffer(const RemoteSniffer&) = delete;
     RemoteSniffer(std::string ip, uint16_t port);
     ~RemoteSniffer();
 

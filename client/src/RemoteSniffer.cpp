@@ -60,6 +60,9 @@ void RemoteSniffer::connect()
     std::string pkey_path = home_path + NS_CLIENT_SSL_KEY_FILE;
 
     CapabilitySetter::set_required_caps(CAP_SET);
+    // The communicator is instantiated here instead of in the constructor in order to avoid
+    // potentially creating SSL files when the connection won't succeed
+    // It's just not needed early on
     this->_communicator = std::unique_ptr<Communicator>(
         new Communicator(_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str())
     );

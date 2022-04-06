@@ -2,6 +2,7 @@
 #include <tins/tins.h>
 #include <string>
 #include "Communicator.h"
+#include <memory>
 
 using namespace Tins;
 
@@ -10,12 +11,12 @@ using interface_ip_pair = std::pair<std::string, std::string>;
 class NetscoutServer
 {
 private:
-    static Communicator* _communicator;
+    std::unique_ptr<Communicator> _communicator;
     
     // Server related members
     uint16_t _port;
     int32_t _server_sockfd;
-    static int32_t _client_sockfd; // Must be static so the callback can access it too
+    int32_t _client_sockfd;
 
     // Stores the interfaces which are available on the machine which is running the server
     std::vector<interface_ip_pair> _avail_interfaces;
@@ -37,9 +38,10 @@ private:
 
     void start_sniffer();
 
-    static bool callback(const Packet& packet);
+    bool callback(const Packet& packet);
 
 public:
+    NetscoutServer(const NetscoutServer&) = delete;
     NetscoutServer(uint16_t port);
     ~NetscoutServer();
     
