@@ -26,16 +26,11 @@ RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
 
     this->_connect_succeeded = false;
     this->_sniffer_configured = false;
-    this->_communicator = nullptr;
 }
 
 RemoteSniffer::~RemoteSniffer()
 {
     close(_server_sockfd);
-    if (this->_communicator != nullptr)
-    {
-        delete this->_communicator;
-    }
 }
 
 void RemoteSniffer::start_sniffer()
@@ -65,7 +60,9 @@ void RemoteSniffer::connect()
     std::string pkey_path = home_path + NS_CLIENT_SSL_KEY_FILE;
 
     CapabilitySetter::set_required_caps(CAP_SET);
-    this->_communicator = new Communicator(_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str());
+    this->_communicator = std::unique_ptr<Communicator>(
+        new Communicator(_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str())
+    );
     CapabilitySetter::set_required_caps(CAP_CLEAR);
 
     this->_connect_succeeded = true;

@@ -2,13 +2,14 @@
 #include <tins/tins.h>
 #include "Communicator.h"
 #include <string>
+#include <memory>
 
 using namespace Tins;
 
 class RemoteSniffer
 {
 private:
-    Communicator* _communicator;
+    std::unique_ptr<Communicator> _communicator;
     // Server related members
     std::string _ip;
     uint16_t _port;

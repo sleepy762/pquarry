@@ -300,6 +300,6 @@ void NetscoutMenu::start_remote_sniffer() const
     port = NetscoutMenu::get_value<uint16_t>();
     std::cout << '\n';
 
-    RemoteSniffer rsniffer = RemoteSniffer(ip, port);
+    RemoteSniffer rsniffer(ip, port);
     rsniffer.start_sniffer();
 }

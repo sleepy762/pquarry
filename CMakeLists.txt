@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Setting the main project name
-set(PROJECT_NAME "NetScout")
+set(PROJECT_NAME "netscout")
 project(${PROJECT_NAME})
 
 # Defining the target names
 set(CLIENT_NAME ${PROJECT_NAME})
-set(SERVER_NAME "${PROJECT_NAME}Server")
+set(SERVER_NAME "${PROJECT_NAME}server")
 set(COMMON_PKG_NAME "nscommon")
 
 # Specifying the C++ Standard and flags
