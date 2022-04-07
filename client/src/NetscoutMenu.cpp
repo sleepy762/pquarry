@@ -229,7 +229,7 @@ void NetscoutMenu::see_information() const
     std::cout << "== Information ==" << '\n';
     std::cout << "Interface: " << this->_local_interface << '\n';
     std::cout << "Filters: " << this->_local_filters << '\n';
-    std::cout << "Saved packets: " << saved_packets.size() << '\n';
+    std::cout << "Saved packets: " << saved_packets.size() << " (max " << MAX_AMOUNT_OF_PACKETS << ")\n";
 }
 
 void NetscoutMenu::set_interface()
