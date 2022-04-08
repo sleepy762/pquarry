@@ -87,10 +87,10 @@ void NetscoutServer::start()
     }
 
     // If the client disconnects from the SSL socket, the server will terminate because of a broken pipe
-    SignalHandler::set_signal_handler(SIGPIPE, SIG_IGN, 0);
+    SignalHandler sigpipeHandler(SIGPIPE, SIG_IGN, 0);
     
     _interrupt_function_wrapper = [this]() { this->interrupt_function(); };
-    SignalHandler::set_signal_handler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
+    SignalHandler sigintHandler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
 
     std::cout << "Press Ctrl+C to stop the server." << '\n';
     std::cout << "Listening on port " << this->_port << '\n';
@@ -132,11 +132,11 @@ void NetscoutServer::accept()
     std::string cert_path = home_path + NS_SERVER_SSL_CERT_FILE;
     std::string pkey_path = home_path + NS_SERVER_SSL_KEY_FILE;
 
-    CapabilitySetter::set_required_caps(CAP_SET);
+    CapabilitySetter commCaps(CAP_SET);
     this->_communicator = std::unique_ptr<Communicator>(
         new Communicator(this->_client_sockfd, TLS_server_method(), cert_path.c_str(), pkey_path.c_str())
     );
-    CapabilitySetter::set_required_caps(CAP_CLEAR);
+    commCaps.set_required_caps(CAP_CLEAR);
 
     std::cout << "Client connected at " << client_ip_address << ":" << client_port << '\n';
 
@@ -230,9 +230,9 @@ std::string NetscoutServer::get_filters_from_client() const
 
         filters = this->_communicator->recv();
 
-        CapabilitySetter::set_required_caps(CAP_SET);
+        CapabilitySetter filterCaps(CAP_SET);
         valid = this->are_filters_valid(filters, filter_error);
-        CapabilitySetter::set_required_caps(CAP_CLEAR);
+        filterCaps.set_required_caps(CAP_CLEAR);
 
         if (!valid)
         {
@@ -275,7 +275,7 @@ void NetscoutServer::start_sniffer()
     config.set_filter(this->_chosen_filters);
     config.set_immediate_mode(true);
 
-    CapabilitySetter::set_required_caps(CAP_SET);
+    CapabilitySetter snifferCaps(CAP_SET);
 
     Sniffer sniffer = Sniffer(this->_chosen_interface, config);
     sniffer.set_extract_raw_pdus(true); // Don't interpret packets
@@ -284,8 +284,6 @@ void NetscoutServer::start_sniffer()
             return this->callback(packet);
         }
     );
-    
-    CapabilitySetter::set_required_caps(CAP_CLEAR);
 }
 
 bool NetscoutServer::callback(const Packet& packet)

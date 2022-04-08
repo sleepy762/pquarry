@@ -59,15 +59,13 @@ void RemoteSniffer::connect()
     std::string cert_path = home_path + NS_CLIENT_SSL_CERT_FILE;
     std::string pkey_path = home_path + NS_CLIENT_SSL_KEY_FILE;
 
-    CapabilitySetter::set_required_caps(CAP_SET);
+    CapabilitySetter commCaps(CAP_SET);
     // The communicator is instantiated here instead of in the constructor in order to avoid
     // potentially creating SSL files when the connection won't succeed
     // It's just not needed early on
     this->_communicator = std::unique_ptr<Communicator>(
         new Communicator(this->_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str())
     );
-    CapabilitySetter::set_required_caps(CAP_CLEAR);
-
     this->_connect_succeeded = true;
 }
 
@@ -126,7 +124,7 @@ void RemoteSniffer::packet_receiver()
 
     _interrupt_function_wrapper = [this]() { this->interrupt_function(); };
     // Set a handler to close the socket and return to the main menu upon interrupt
-    SignalHandler::set_signal_handler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
+    SignalHandler sigintHandler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
     
     std::cout << '\n' << "Starting remote sniffer at " << this->_ip << ':' << this->_port << '\n';
     std::cout << "Interface: " << this->_remote_interface << '\n';
@@ -158,8 +156,6 @@ void RemoteSniffer::interrupt_function()
 {
     // Terminate the connection to return to the main menu
     close(this->_server_sockfd);
-    // We want to disable the signal handler when we are not connected to the server
-    SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
 }
 
 std::string RemoteSniffer::get_nonempty_line()

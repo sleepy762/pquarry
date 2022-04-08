@@ -18,9 +18,6 @@ std::function<void()> LocalSniffer::_interrupt_function_wrapper;
 void LocalSniffer::interrupt_function()
 {
     this->_sniffer->stop_sniff();
-
-    // We want to disable the signal handler when we are not sniffing
-    SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
 }
 
 void LocalSniffer::start_sniffer()
@@ -41,15 +38,11 @@ void LocalSniffer::start_sniffer()
     // Set the wrapper interrupt function which will be called inside the interrupt handler    
     _interrupt_function_wrapper = [this]() { this->interrupt_function(); };
 
-    CapabilitySetter::set_required_caps(CAP_SET);
+    // We want the signal handler to work only while sniffing
+    SignalHandler sigintHandler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
+    CapabilitySetter snifferCaps(CAP_SET);
 
     this->_sniffer = std::unique_ptr<Sniffer>(new Sniffer(this->_interface, config));
-
-    // We want the signal handler to work only while sniffing
-    SignalHandler::set_signal_handler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
-
     // Starts the sniffer
     this->_sniffer->sniff_loop(callback);
-
-    CapabilitySetter::set_required_caps(CAP_CLEAR);
 }

@@ -1,3 +1,6 @@
+-- 08/04/2022
+- SignalHandler and CapabilitySetter are now non-static objects which will reset the signal handler and capabilities in their destructors respectively.
+
 -- 05/04/2022
 - Moved includes to the source files.
 - Fixed memory leak with SSL_CTX.

@@ -7,6 +7,24 @@
 const cap_value_t CapabilitySetter::_cap_list[REQUIRED_CAPS_AMOUNT] = 
 { CAP_NET_RAW };
 
+CapabilitySetter::CapabilitySetter()
+{
+    this->_caps_set = false;
+}
+
+CapabilitySetter::CapabilitySetter(cap_flag_value_t flag)
+{
+    this->set_required_caps(flag);
+}
+
+CapabilitySetter::~CapabilitySetter()
+{
+    if (this->_caps_set)
+    {
+        this->set_required_caps(CAP_CLEAR);
+    }
+}
+
 void CapabilitySetter::initialize_caps()
 {
     cap_t caps = cap_get_proc();
@@ -36,6 +54,15 @@ void CapabilitySetter::initialize_caps()
 
 void CapabilitySetter::set_required_caps(cap_flag_value_t flag)
 {
+    if (flag == CAP_SET)
+    {
+        this->_caps_set = true;
+    }
+    else if (flag == CAP_CLEAR)
+    {
+        this->_caps_set = false;
+    }
+
     cap_t caps = cap_get_proc();
     if (caps == NULL)
     {
