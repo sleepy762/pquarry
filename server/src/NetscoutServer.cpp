@@ -15,6 +15,8 @@
 #define NS_SERVER_SSL_CERT_FILE ("/.nsServerCert.pem") 
 #define NS_SERVER_SSL_KEY_FILE ("/.nsServerKey.pem")
 
+std::function<void()> NetscoutServer::_interrupt_function_wrapper;
+
 NetscoutServer::NetscoutServer(uint16_t port)
 {
     this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -24,6 +26,7 @@ NetscoutServer::NetscoutServer(uint16_t port)
     }
 
     this->_port = port;
+    this->_stop_server = false;
 }
 
 NetscoutServer::~NetscoutServer()
@@ -85,7 +88,11 @@ void NetscoutServer::start()
 
     // If the client disconnects from the SSL socket, the server will terminate because of a broken pipe
     SignalHandler::set_signal_handler(SIGPIPE, SIG_IGN, 0);
+    
+    _interrupt_function_wrapper = [this]() { this->interrupt_function(); };
+    SignalHandler::set_signal_handler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
 
+    std::cout << "Press Ctrl+C to stop the server." << '\n';
     std::cout << "Listening on port " << this->_port << '\n';
     // Accept connections until server is closed
     while (true)
@@ -96,6 +103,10 @@ void NetscoutServer::start()
         }
         catch(const std::exception& e)
         {
+            if (this->_stop_server)
+            {
+                break;
+            }
             std::cerr << e.what() << '\n';
         }
     }
@@ -294,4 +305,9 @@ bool NetscoutServer::callback(const Packet& packet)
     }
 
     return true;
+}
+
+void NetscoutServer::interrupt_function()
+{
+    this->_stop_server = true;
 }

@@ -3,6 +3,7 @@
 #include <string>
 #include "Communicator.h"
 #include <memory>
+#include <functional>
 
 using namespace Tins;
 
@@ -39,6 +40,10 @@ private:
     void start_sniffer();
 
     bool callback(const Packet& packet);
+
+    static std::function<void()> _interrupt_function_wrapper;
+    void interrupt_function();
+    bool _stop_server;
 
 public:
     NetscoutServer(const NetscoutServer&) = delete;

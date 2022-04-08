@@ -1,5 +1,6 @@
 Version 1.2.2 -- 05/04/2022
 - Changed the name of the certificate and private key files.
+- Added a proper way to close the server.
 
 Version 1.2.1 -- 30/01/2022
 - SSL certificates and private keys are created in the home directory.
