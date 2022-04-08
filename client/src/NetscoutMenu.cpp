@@ -229,7 +229,8 @@ void NetscoutMenu::see_information() const
     std::cout << "== Information ==" << '\n';
     std::cout << "Interface: " << this->_local_interface << '\n';
     std::cout << "Filters: " << this->_local_filters << '\n';
-    std::cout << "Saved packets: " << saved_packets.size() << " (max " << MAX_AMOUNT_OF_PACKETS << ")\n";
+    std::cout << "Saved packets: " << saved_packets.size() << '\n';
+    std::cout << "Packet limit: " << MAX_AMOUNT_OF_PACKETS << '\n';
 }
 
 void NetscoutMenu::set_interface()
@@ -279,7 +280,7 @@ void NetscoutMenu::set_filters(std::string filters)
 
 void NetscoutMenu::start_local_sniffer() const
 {
-    LocalSniffer lsniffer = LocalSniffer(this->_local_interface, this->_local_filters);
+    LocalSniffer lsniffer(this->_local_interface, this->_local_filters);
     lsniffer.start_sniffer();
 }
 

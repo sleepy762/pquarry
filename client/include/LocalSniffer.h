@@ -1,6 +1,8 @@
 #pragma once
 #include <tins/tins.h>
 #include <string>
+#include <functional>
+#include <memory>
 
 using namespace Tins;
 
@@ -14,8 +16,10 @@ private:
     std::string _interface;
     std::string _filters;
 
-    static Sniffer* _sniffer_ptr;
-    static void sniffer_interrupt(int);
+    std::unique_ptr<Sniffer> _sniffer;
+
+    static std::function<void()> _interrupt_function_wrapper;
+    void interrupt_function();
 
 public:
     LocalSniffer(std::string interface, std::string filters);
