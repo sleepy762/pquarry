@@ -1,15 +1,14 @@
 #pragma once
-#include <tins/tins.h>
 #include "Communicator.h"
 #include <string>
 #include <memory>
 #include <functional>
-
-using namespace Tins;
+#include "PacketContainer.h"
 
 class RemoteSniffer
 {
 private:
+    PacketContainer& _packet_container;
     std::unique_ptr<Communicator> _communicator;
 
     // Server related members
@@ -38,8 +37,8 @@ private:
     void start();
 
 public:
+    RemoteSniffer(PacketContainer& packet_container, std::string ip, uint16_t port);
     RemoteSniffer(const RemoteSniffer&) = delete;
-    RemoteSniffer(std::string ip, uint16_t port);
     ~RemoteSniffer();
 
     void start_sniffer();

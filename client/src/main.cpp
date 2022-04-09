@@ -19,18 +19,10 @@ int main(int argc, char** argv)
         }
         setuid(getuid());
     }
-    
-    // I want to keep NetscoutMenu on the stack so I'm just doing it this way
-    if (argc > 1)
-    {
-        NetscoutMenu menu = NetscoutMenu::instantiate_with_args(argc, argv);
-        menu.menu_loop();
-    }
-    else
-    {
-        NetscoutMenu menu = NetscoutMenu();
-        menu.menu_loop();
-    }
+
+    PacketContainer packet_container;
+    NetscoutMenu menu = NetscoutMenu(packet_container, argc, argv);
+    menu.menu_loop();
 
     return 0;
 }

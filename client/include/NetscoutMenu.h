@@ -4,6 +4,7 @@
 #include <vector>
 #include <limits>
 #include <iostream>
+#include "PacketContainer.h"
 
 // Enum of menu options
 typedef enum menu_entry_index
@@ -23,6 +24,7 @@ using interface_ip_pair = std::pair<std::string, std::string>;
 class NetscoutMenu
 {
 private:
+    PacketContainer& _packet_container;
     std::string _local_interface;
     std::string _local_filters;
 
@@ -53,11 +55,9 @@ private:
     void start_remote_sniffer() const;
 
 public:
-    NetscoutMenu();
-    NetscoutMenu(std::string interface, std::string filters);
+    NetscoutMenu(PacketContainer& packet_container);
+    NetscoutMenu(PacketContainer& packet_container, int argc, char** argv);
     ~NetscoutMenu();
-
-    static NetscoutMenu instantiate_with_args(int argc, char** argv);
 
     template <typename T>
     static T get_value();

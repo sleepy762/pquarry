@@ -1,11 +1,14 @@
 #include "RemoteSniffer.h"
-#include "callback.h"
+#include <tins/tins.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <iostream>
 #include "Deserializer.h"
 #include "CapabilitySetter.h"
 #include "SignalHandler.h"
+#include "PacketPrinter.h"
+
+using namespace Tins;
 
 #define INVALID_SUBSTR ("Invalid")
 
@@ -14,7 +17,8 @@
 
 std::function<void()> RemoteSniffer::_interrupt_function_wrapper;
 
-RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
+RemoteSniffer::RemoteSniffer(PacketContainer& packet_container, std::string ip, uint16_t port)
+    : _packet_container(packet_container)
 {
     this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->_server_sockfd == INVALID_SOCKET)
@@ -147,7 +151,9 @@ void RemoteSniffer::packet_receiver()
 
             EthernetII eth_pdu = EthernetII((const uint8_t*)single_packet_data.c_str(), single_packet_data.size());
             Packet packet = Packet(eth_pdu);
-            callback(packet);
+
+            PacketPrinter::print_packet(packet);
+            this->_packet_container.add_packet(packet);
         }
     }
 }

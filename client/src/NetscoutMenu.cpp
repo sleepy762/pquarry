@@ -1,11 +1,10 @@
 #include "NetscoutMenu.h"
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include "ProtocolDeterminer.h"
 #include "Version.h"
-#include "callback.h"
 #include "RemoteSniffer.h"
 #include "LocalSniffer.h"
+#include "PacketPrinter.h"
 
 #define ERROR_COLOR (ANSI_RGB(217,35,35))
 #define SUCCESS_COLOR (ANSI_RGB(35,217,83))
@@ -24,45 +23,41 @@ const std::map<menu_entry_index, const char*> NetscoutMenu::_main_menu_entries =
     { EXIT_OPT, "Exit" }
 };
 
-NetscoutMenu::NetscoutMenu()
+NetscoutMenu::NetscoutMenu(PacketContainer& packet_container)
+    : _packet_container(packet_container)
 {
     this->_local_interface = "";
     this->_local_filters = "";
 }
 
-NetscoutMenu::NetscoutMenu(std::string interface, std::string filters)
-{
-    this->_local_interface = interface;
-    this->_local_filters = filters;
-}
-
 NetscoutMenu::~NetscoutMenu() {}
 
-NetscoutMenu NetscoutMenu::instantiate_with_args(int argc, char** argv)
+NetscoutMenu::NetscoutMenu(PacketContainer& packet_container, int argc, char** argv)
+    : _packet_container(packet_container)
 {
-    std::string interface = "";
-    std::string filters = "";
-
     // If arguments were passed, we use the 2nd arg as the interface and the 3rd+ as the filters
     if (argc >= 2)
     {
-        interface = argv[1];
+        this->_local_interface = argv[1];
         if (argc >= 3)
         {
             // Concatenate the rest of the arguments into filters (starts at argv[2])
             // Alternatively, the user can simply put the filters in quotes
             for (int i = 2; i < argc; i++)
             {
-                filters += argv[i];
+                this->_local_filters += argv[i];
                 if (i + 1 != argc) // Add spaces in between args
                 {
-                    filters += ' ';
+                    this->_local_filters += ' ';
                 }
             }
         }
     }
-    return NetscoutMenu(interface, filters);
-
+    else
+    {
+        this->_local_interface = "";
+        this->_local_filters = "";
+    }
 }
 
 void NetscoutMenu::print_success_msg(const char* msg)
@@ -176,11 +171,11 @@ void NetscoutMenu::menu_loop()
 
 void NetscoutMenu::clear_saved_packets() const
 {
-    int amountOfPackets = saved_packets.size();
+    size_t amountOfPackets = this->_packet_container.size();
 
     // The clear() method calls the destructor for each packet
-    saved_packets.clear();
-    packet_number = 1;
+    this->_packet_container.clear_packets();
+    PacketPrinter::reset_packet_number();
 
     const std::string msg = std::to_string(amountOfPackets) + " saved packets were cleared.";
     NetscoutMenu::print_success_msg(msg.c_str());
@@ -188,7 +183,7 @@ void NetscoutMenu::clear_saved_packets() const
 
 void NetscoutMenu::export_packets() const
 {
-    if (saved_packets.size() == 0)
+    if (this->_packet_container.size() == 0)
     {
         throw std::runtime_error("There are no saved packets.");
     }
@@ -215,12 +210,14 @@ void NetscoutMenu::export_packets() const
 
     // Writes the packets into a pcap file
     PacketWriter writer(filename, DataLinkType<EthernetII>());
-    for (auto it = saved_packets.begin(); it != saved_packets.end(); it++)
+    const std::list<Packet>& packet_list = this->_packet_container.get_packet_list();
+    for (auto it = packet_list.begin(); it != packet_list.end(); it++)
     {
-        writer.write(*it);
+        Packet packet = *it;
+        writer.write(packet);
     }
 
-    const std::string msg = std::to_string(saved_packets.size()) + " packets were written to " + filename;
+    const std::string msg = std::to_string(packet_list.size()) + " packets were written to " + filename;
     NetscoutMenu::print_success_msg(msg.c_str());
 }
 
@@ -229,7 +226,7 @@ void NetscoutMenu::see_information() const
     std::cout << "== Information ==" << '\n';
     std::cout << "Interface: " << this->_local_interface << '\n';
     std::cout << "Filters: " << this->_local_filters << '\n';
-    std::cout << "Saved packets: " << saved_packets.size() << '\n';
+    std::cout << "Saved packets: " << this->_packet_container.size() << '\n';
     std::cout << "Packet limit: " << MAX_AMOUNT_OF_PACKETS << '\n';
 }
 
@@ -280,7 +277,7 @@ void NetscoutMenu::set_filters(std::string filters)
 
 void NetscoutMenu::start_local_sniffer() const
 {
-    LocalSniffer lsniffer(this->_local_interface, this->_local_filters);
+    LocalSniffer lsniffer(this->_packet_container, this->_local_interface, this->_local_filters);
     lsniffer.start_sniffer();
 }
 
@@ -301,6 +298,6 @@ void NetscoutMenu::start_remote_sniffer() const
     port = NetscoutMenu::get_value<uint16_t>();
     std::cout << '\n';
 
-    RemoteSniffer rsniffer(ip, port);
+    RemoteSniffer rsniffer(this->_packet_container, ip, port);
     rsniffer.start_sniffer();
 }

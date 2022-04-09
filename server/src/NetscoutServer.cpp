@@ -280,10 +280,9 @@ void NetscoutServer::start_sniffer()
     Sniffer sniffer = Sniffer(this->_chosen_interface, config);
     sniffer.set_extract_raw_pdus(true); // Don't interpret packets
     sniffer.sniff_loop([this](const Packet& packet) -> bool
-        {
-            return this->callback(packet);
-        }
-    );
+    {
+        return this->callback(packet);
+    });
 }
 
 bool NetscoutServer::callback(const Packet& packet)

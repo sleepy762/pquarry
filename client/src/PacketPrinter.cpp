@@ -1,4 +1,61 @@
 #include "PacketPrinter.h"
+#include <iostream>
+#include <list>
+
+uint64_t PacketPrinter::_packet_number = 1;
+
+void PacketPrinter::print_packet(const Packet& packet)
+{
+    // Stores a list of the protocols in the PDU in order
+    std::list<PDU::PDUType> protocols;
+
+    // Holds the packet output line
+    std::stringstream ss;
+    // Packet serial number
+    ss << _packet_number << '\t';
+
+    protocol_properties properties;
+
+    std::unique_ptr<PDU> originalPDU(packet.pdu()->clone());
+    // Gather data from all the protocols in the list of PDUs
+    // Each PDU in the chain has certain data that we might want
+    PDU* inner = originalPDU.get();
+    while (inner != nullptr)
+    {
+        PDU::PDUType innerType = inner->pdu_type();
+
+        // Store the sequence of protocols
+        if (innerType != PDU::PDUType::RAW)
+        {
+            properties = PacketPrinter::get_protocol_properties(innerType, inner, ss);
+            protocols.push_back(innerType);
+        }
+
+        // Advance the pdu list
+        inner = inner->inner_pdu();
+    }
+    ss << originalPDU->size() << '\t';
+
+    // Append alternative protocol name, if it exists
+    if (properties.protocolString != nullptr)
+    {
+        ss << properties.protocolString << '(' << Utils::to_string(protocols.back()) << ')';
+    }
+    else
+    {
+        ss << Utils::to_string(protocols.back());
+    }
+
+    // Output the entire packet string stream
+    std::cout << properties.protocolColor << ss.str() << RESET_COLOR << '\n';
+
+    _packet_number++;
+}
+
+void PacketPrinter::reset_packet_number()
+{
+    _packet_number = 1;
+}
 
 // Adds relevant info to the string stream and returns a color for the output
 protocol_properties PacketPrinter::get_protocol_properties(PDU::PDUType currPDUType, PDU* currPDU,

@@ -1,10 +1,11 @@
 #include "LocalSniffer.h"
-#include "callback.h"
 #include <iostream>
 #include "SignalHandler.h"
 #include "CapabilitySetter.h"
+#include "PacketPrinter.h"
 
-LocalSniffer::LocalSniffer(std::string interface, std::string filters)
+LocalSniffer::LocalSniffer(PacketContainer& packet_container, std::string interface, std::string filters)
+    : _packet_container(packet_container)
 {
     this->_interface = interface;
     this->_filters = filters;
@@ -44,5 +45,10 @@ void LocalSniffer::start_sniffer()
 
     this->_sniffer = std::unique_ptr<Sniffer>(new Sniffer(this->_interface, config));
     // Starts the sniffer
-    this->_sniffer->sniff_loop(callback);
+    this->_sniffer->sniff_loop([this](const Packet& packet)
+    {
+        PacketPrinter::print_packet(packet);
+        this->_packet_container.add_packet(packet);
+        return true;
+    });
 }

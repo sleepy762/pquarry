@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include "PacketContainer.h"
 
 using namespace Tins;
 
@@ -13,6 +14,7 @@ using interface_ip_pair = std::pair<std::string, std::string>;
 class LocalSniffer
 {
 private:
+    PacketContainer& _packet_container;
     std::string _interface;
     std::string _filters;
 
@@ -22,7 +24,8 @@ private:
     void interrupt_function();
 
 public:
-    LocalSniffer(std::string interface, std::string filters);
+    LocalSniffer(PacketContainer& packet_container, std::string interface, std::string filters);
+    LocalSniffer(const LocalSniffer&) = delete;
     ~LocalSniffer();
 
     void start_sniffer();
