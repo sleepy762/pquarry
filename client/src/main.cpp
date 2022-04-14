@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <iostream>
-#include "NetscoutMenu.h"
+#include "PQuarryMenu.h"
 #include "CapabilitySetter.h"
 
 int main(int argc, char** argv)
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     }
 
     PacketContainer packet_container;
-    NetscoutMenu menu = NetscoutMenu(packet_container, argc, argv);
+    PQuarryMenu menu = PQuarryMenu(packet_container, argc, argv);
     menu.menu_loop();
 
     return 0;

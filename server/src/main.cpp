@@ -1,4 +1,4 @@
-#include "NetscoutServer.h"
+#include "PQuarryServer.h"
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -40,10 +40,10 @@ int main(int argc, char** argv)
     uint16_t port;
     strVal >> port;
 
-    std::cout << "Starting NetScout Server Version " << SERVER_VERSION << '\n';
+    std::cout << "Starting PQuarry Server Version " << SERVER_VERSION << '\n';
     try
     {
-        NetscoutServer server(port);
+        PQuarryServer server(port);
         server.start();
     }
     catch(const std::exception& e)

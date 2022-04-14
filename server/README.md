@@ -1,12 +1,10 @@
-# NetScout Server
+# PQuarry Server
 
 ## Running
 
-The executable must be run as root in order to work (root permissions are reduced during runtime).
-
 The server requires a port argument, for example:
 ```
-sudo ./NetScoutServer 1337
+pquarryserver 1337
 ```
 This line will launch the server on the port 1337.
 

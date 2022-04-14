@@ -21,7 +21,7 @@ typedef enum menu_entry_index
 
 using interface_ip_pair = std::pair<std::string, std::string>;
 
-class NetscoutMenu
+class PQuarryMenu
 {
 private:
     PacketContainer& _packet_container;
@@ -55,9 +55,9 @@ private:
     void start_remote_sniffer() const;
 
 public:
-    NetscoutMenu(PacketContainer& packet_container);
-    NetscoutMenu(PacketContainer& packet_container, int argc, char** argv);
-    ~NetscoutMenu();
+    PQuarryMenu(PacketContainer& packet_container);
+    PQuarryMenu(PacketContainer& packet_container, int argc, char** argv);
+    ~PQuarryMenu();
 
     template <typename T>
     static T get_value();
@@ -70,7 +70,7 @@ public:
 
 // Will not return until a value is given (of the given type)
 template <typename T>
-T NetscoutMenu::get_value()
+T PQuarryMenu::get_value()
 {
     T input;
     bool fail;
@@ -84,7 +84,7 @@ T NetscoutMenu::get_value()
         {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            NetscoutMenu::print_error_msg("Invalid input.");
+            PQuarryMenu::print_error_msg("Invalid input.");
         }
     } while(fail);
     return input;

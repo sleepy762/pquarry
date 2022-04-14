@@ -9,7 +9,7 @@ using namespace Tins;
 
 using interface_ip_pair = std::pair<std::string, std::string>;
 
-class NetscoutServer
+class PQuarryServer
 {
 private:
     std::unique_ptr<Communicator> _communicator;
@@ -46,9 +46,9 @@ private:
     bool _stop_server;
 
 public:
-    NetscoutServer(const NetscoutServer&) = delete;
-    NetscoutServer(uint16_t port);
-    ~NetscoutServer();
+    PQuarryServer(const PQuarryServer&) = delete;
+    PQuarryServer(uint16_t port);
+    ~PQuarryServer();
     
     void start();
 };

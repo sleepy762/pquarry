@@ -1,4 +1,4 @@
-#include "NetscoutMenu.h"
+#include "PQuarryMenu.h"
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include "Version.h"
@@ -11,7 +11,7 @@
 
 #define PCAP_FILE_EXTENSION (".pcap")
 
-const std::map<menu_entry_index, const char*> NetscoutMenu::_main_menu_entries = 
+const std::map<menu_entry_index, const char*> PQuarryMenu::_main_menu_entries = 
 {
     { START_LOCAL_SNIFFER_OPT, "Start sniffer" },
     { START_REMOTE_SNIFFER_OPT, "Connect to remote sniffer" },
@@ -23,16 +23,16 @@ const std::map<menu_entry_index, const char*> NetscoutMenu::_main_menu_entries =
     { EXIT_OPT, "Exit" }
 };
 
-NetscoutMenu::NetscoutMenu(PacketContainer& packet_container)
+PQuarryMenu::PQuarryMenu(PacketContainer& packet_container)
     : _packet_container(packet_container)
 {
     this->_local_interface = "";
     this->_local_filters = "";
 }
 
-NetscoutMenu::~NetscoutMenu() {}
+PQuarryMenu::~PQuarryMenu() {}
 
-NetscoutMenu::NetscoutMenu(PacketContainer& packet_container, int argc, char** argv)
+PQuarryMenu::PQuarryMenu(PacketContainer& packet_container, int argc, char** argv)
     : _packet_container(packet_container)
 {
     // If arguments were passed, we use the 2nd arg as the interface and the 3rd+ as the filters
@@ -60,19 +60,19 @@ NetscoutMenu::NetscoutMenu(PacketContainer& packet_container, int argc, char** a
     }
 }
 
-void NetscoutMenu::print_success_msg(const char* msg)
+void PQuarryMenu::print_success_msg(const char* msg)
 {
     std::cout << SUCCESS_COLOR << msg << RESET_COLOR << '\n';
 }
 
-void NetscoutMenu::print_error_msg(const char* msg)
+void PQuarryMenu::print_error_msg(const char* msg)
 {
     std::cerr << ERROR_COLOR << msg << RESET_COLOR << '\n';
 }
 
-void NetscoutMenu::print_main_menu() const
+void PQuarryMenu::print_main_menu() const
 {
-    std::cout << '\n' << "NetScout Version " << CLIENT_VERSION << '\n';
+    std::cout << '\n' << "PQuarry Version " << CLIENT_VERSION << '\n';
     for (auto it = _main_menu_entries.cbegin(); it != _main_menu_entries.cend(); it++)
     {
         std::cout << '[' << it->first << ']' << ' ' << it->second << '\n';
@@ -80,7 +80,7 @@ void NetscoutMenu::print_main_menu() const
     std::cout << "Select an option: ";
 }
 
-std::vector<interface_ip_pair> NetscoutMenu::get_interface_list() const
+std::vector<interface_ip_pair> PQuarryMenu::get_interface_list() const
 {
     char buf[1024];
     struct ifconf ifc;
@@ -113,13 +113,13 @@ std::vector<interface_ip_pair> NetscoutMenu::get_interface_list() const
     return interface_vec;
 }
 
-void NetscoutMenu::menu_loop()
+void PQuarryMenu::menu_loop()
 {
     int32_t choice;
     do
     {
         this->print_main_menu();
-        choice = NetscoutMenu::get_value<int32_t>();
+        choice = PQuarryMenu::get_value<int32_t>();
         std::cout << '\n';
         try
         {
@@ -164,12 +164,12 @@ void NetscoutMenu::menu_loop()
         }
         catch (const std::exception& e)
         {
-            NetscoutMenu::print_error_msg(e.what());
+            PQuarryMenu::print_error_msg(e.what());
         }
     } while (choice != EXIT_OPT);
 }
 
-void NetscoutMenu::clear_saved_packets() const
+void PQuarryMenu::clear_saved_packets() const
 {
     size_t amountOfPackets = this->_packet_container.size();
 
@@ -178,10 +178,10 @@ void NetscoutMenu::clear_saved_packets() const
     PacketPrinter::reset_packet_number();
 
     const std::string msg = std::to_string(amountOfPackets) + " saved packets were cleared.";
-    NetscoutMenu::print_success_msg(msg.c_str());
+    PQuarryMenu::print_success_msg(msg.c_str());
 }
 
-void NetscoutMenu::export_packets() const
+void PQuarryMenu::export_packets() const
 {
     if (this->_packet_container.size() == 0)
     {
@@ -218,10 +218,10 @@ void NetscoutMenu::export_packets() const
     }
 
     const std::string msg = std::to_string(packet_list.size()) + " packets were written to " + filename;
-    NetscoutMenu::print_success_msg(msg.c_str());
+    PQuarryMenu::print_success_msg(msg.c_str());
 }
 
-void NetscoutMenu::see_information() const
+void PQuarryMenu::see_information() const
 {
     std::cout << "== Information ==" << '\n';
     std::cout << "Interface: " << this->_local_interface << '\n';
@@ -230,7 +230,7 @@ void NetscoutMenu::see_information() const
     std::cout << "Packet limit: " << MAX_AMOUNT_OF_PACKETS << '\n';
 }
 
-void NetscoutMenu::set_interface()
+void PQuarryMenu::set_interface()
 {
     std::string newInterface = "";
     const std::vector<interface_ip_pair> interfaces = this->get_interface_list();
@@ -249,15 +249,15 @@ void NetscoutMenu::set_interface()
     std::getline(std::cin, newInterface);
     this->set_interface(newInterface);
 
-    NetscoutMenu::print_success_msg("New interface has been set."); 
+    PQuarryMenu::print_success_msg("New interface has been set."); 
 }
 
-void NetscoutMenu::set_interface(std::string interface)
+void PQuarryMenu::set_interface(std::string interface)
 {
     this->_local_interface = interface;
 }
 
-void NetscoutMenu::set_filters()
+void PQuarryMenu::set_filters()
 {
     std::string newFilters = "";
 
@@ -267,21 +267,21 @@ void NetscoutMenu::set_filters()
     std::getline(std::cin, newFilters);
     this->set_filters(newFilters);
 
-    NetscoutMenu::print_success_msg("New filters have been set.");
+    PQuarryMenu::print_success_msg("New filters have been set.");
 }
 
-void NetscoutMenu::set_filters(std::string filters)
+void PQuarryMenu::set_filters(std::string filters)
 {
     this->_local_filters = filters;
 }
 
-void NetscoutMenu::start_local_sniffer() const
+void PQuarryMenu::start_local_sniffer() const
 {
     LocalSniffer lsniffer(this->_packet_container, this->_local_interface, this->_local_filters);
     lsniffer.start_sniffer();
 }
 
-void NetscoutMenu::start_remote_sniffer() const
+void PQuarryMenu::start_remote_sniffer() const
 {
     std::string ip = "";
     uint16_t port;
@@ -295,7 +295,7 @@ void NetscoutMenu::start_remote_sniffer() const
     }
 
     std::cout << "Enter the server port: ";
-    port = NetscoutMenu::get_value<uint16_t>();
+    port = PQuarryMenu::get_value<uint16_t>();
     std::cout << '\n';
 
     RemoteSniffer rsniffer(this->_packet_container, ip, port);

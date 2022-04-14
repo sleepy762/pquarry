@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Setting the main project name
-set(PROJECT_NAME "netscout")
+set(PROJECT_NAME "pquarry")
 project(${PROJECT_NAME})
 
 # Defining the target names
 set(CLIENT_NAME ${PROJECT_NAME})
 set(SERVER_NAME "${PROJECT_NAME}server")
-set(COMMON_PKG_NAME "nscommon")
+set(COMMON_PKG_NAME "pqcommon")
 
 # Specifying the C++ Standard and flags
 set(CMAKE_CXX_STANDARD 11)

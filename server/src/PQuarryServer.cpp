@@ -1,4 +1,4 @@
-#include "NetscoutServer.h"
+#include "PQuarryServer.h"
 #include <sys/socket.h>
 #include <stdexcept>
 #include <unistd.h>
@@ -15,9 +15,9 @@
 #define NS_SERVER_SSL_CERT_FILE ("/.nsServerCert.pem") 
 #define NS_SERVER_SSL_KEY_FILE ("/.nsServerKey.pem")
 
-std::function<void()> NetscoutServer::_interrupt_function_wrapper;
+std::function<void()> PQuarryServer::_interrupt_function_wrapper;
 
-NetscoutServer::NetscoutServer(uint16_t port)
+PQuarryServer::PQuarryServer(uint16_t port)
 {
     this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->_server_sockfd == INVALID_SOCKET)
@@ -29,7 +29,7 @@ NetscoutServer::NetscoutServer(uint16_t port)
     this->_stop_server = false;
 }
 
-NetscoutServer::~NetscoutServer()
+PQuarryServer::~PQuarryServer()
 {
     if (this->_client_sockfd != INVALID_SOCKET)
     {
@@ -39,7 +39,7 @@ NetscoutServer::~NetscoutServer()
 }
 
 // The interfaces are stored in a class member because multiple methods need to access it
-void NetscoutServer::update_interface_list()
+void PQuarryServer::update_interface_list()
 {
     this->_avail_interfaces.clear();
 
@@ -70,7 +70,7 @@ void NetscoutServer::update_interface_list()
     }
 }
 
-void NetscoutServer::start()
+void PQuarryServer::start()
 {
     struct sockaddr_in sock_addr;
     sock_addr.sin_family = AF_INET;
@@ -112,7 +112,7 @@ void NetscoutServer::start()
     }
 }
 
-void NetscoutServer::accept()
+void PQuarryServer::accept()
 {
     struct sockaddr_in client_addr;
     socklen_t client_addrlen = sizeof(client_addr);
@@ -145,7 +145,7 @@ void NetscoutServer::accept()
     this->start_sniffer();
 }
 
-void NetscoutServer::configure_sniffer_with_client()
+void PQuarryServer::configure_sniffer_with_client()
 {
     // Get the necessary info from the client 
     this->_chosen_interface = this->get_interface_from_client();
@@ -162,7 +162,7 @@ void NetscoutServer::configure_sniffer_with_client()
     this->_communicator->send("Configuration complete!");
 }
 
-std::string NetscoutServer::get_interface_from_client() const
+std::string PQuarryServer::get_interface_from_client() const
 {
     bool valid;
     std::string interface;
@@ -184,7 +184,7 @@ std::string NetscoutServer::get_interface_from_client() const
     return interface;
 }
 
-std::string NetscoutServer::get_formatted_interfaces_msg() const
+std::string PQuarryServer::get_formatted_interfaces_msg() const
 {
     std::string msg;
 
@@ -204,7 +204,7 @@ std::string NetscoutServer::get_formatted_interfaces_msg() const
     return msg;
 }
 
-bool NetscoutServer::is_interface_valid(const std::string& interface) const
+bool PQuarryServer::is_interface_valid(const std::string& interface) const
 {
     for (auto it = _avail_interfaces.cbegin(); it != _avail_interfaces.cend(); it++)
     {
@@ -217,7 +217,7 @@ bool NetscoutServer::is_interface_valid(const std::string& interface) const
     return false;
 }
 
-std::string NetscoutServer::get_filters_from_client() const
+std::string PQuarryServer::get_filters_from_client() const
 {
     bool valid;
     std::string filters = "";
@@ -244,7 +244,7 @@ std::string NetscoutServer::get_filters_from_client() const
     return filters;
 }
 
-bool NetscoutServer::are_filters_valid(std::string& filters, std::string& error_out) const
+bool PQuarryServer::are_filters_valid(std::string& filters, std::string& error_out) const
 {
     // It's impossible to send an empty string and recv it, so we must use some special string
     // It's also important to clear the special string from the filters because it's not valid
@@ -269,7 +269,7 @@ bool NetscoutServer::are_filters_valid(std::string& filters, std::string& error_
     return true;
 }
 
-void NetscoutServer::start_sniffer()
+void PQuarryServer::start_sniffer()
 {
     SnifferConfiguration config;
     config.set_filter(this->_chosen_filters);
@@ -285,7 +285,7 @@ void NetscoutServer::start_sniffer()
     });
 }
 
-bool NetscoutServer::callback(const Packet& packet)
+bool PQuarryServer::callback(const Packet& packet)
 {
     std::unique_ptr<PDU> pdu(packet.pdu()->clone());
     byte_array bytes = pdu->serialize();
@@ -304,7 +304,7 @@ bool NetscoutServer::callback(const Packet& packet)
     return true;
 }
 
-void NetscoutServer::interrupt_function()
+void PQuarryServer::interrupt_function()
 {
     this->_stop_server = true;
 }
