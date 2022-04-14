@@ -4,7 +4,7 @@
 SignalHandler::SignalHandler(int signal)
 {
     this->_signal = signal;
-    this->_signal_set = false;
+    this->_signal_handler_set = false;
 }
 
 SignalHandler::SignalHandler(int signal, void(*handler_func)(int), int flags)
@@ -15,7 +15,7 @@ SignalHandler::SignalHandler(int signal, void(*handler_func)(int), int flags)
 
 SignalHandler::~SignalHandler()
 {
-    if (this->_signal_set)
+    if (this->_signal_handler_set)
     {
         this->set_signal_handler(SIG_DFL, 0);
     }
@@ -30,5 +30,5 @@ void SignalHandler::set_signal_handler(void(*handler_func)(int), int flags)
     new_action.sa_flags = flags;
     
     sigaction(this->_signal, &new_action, nullptr);
-    this->_signal_set = true;
+    this->_signal_handler_set = true;
 }

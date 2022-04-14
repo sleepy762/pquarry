@@ -12,8 +12,8 @@
 
 #define NO_FILTERS_STR ("no")
 
-#define NS_SERVER_SSL_CERT_FILE ("/.nsServerCert.pem") 
-#define NS_SERVER_SSL_KEY_FILE ("/.nsServerKey.pem")
+#define PQ_SERVER_SSL_CERT_FILE ("/.pqServerCert.pem") 
+#define PQ_SERVER_SSL_KEY_FILE ("/.pqServerKey.pem")
 
 std::function<void()> PQuarryServer::_interrupt_function_wrapper;
 
@@ -97,17 +97,21 @@ void PQuarryServer::start()
     // Accept connections until server is closed
     while (true)
     {
+        if (this->_stop_server)
+        {
+            break;
+        }
+
         try
         {
             this->accept();
         }
         catch(const std::exception& e)
         {
-            if (this->_stop_server)
+            if (!this->_stop_server)
             {
-                break;
+                std::cerr << e.what() << '\n';
             }
-            std::cerr << e.what() << '\n';
         }
     }
 }
@@ -129,8 +133,8 @@ void PQuarryServer::accept()
     uint16_t client_port = ntohs(client_addr.sin_port);
 
     std::string home_path = getenv("HOME");
-    std::string cert_path = home_path + NS_SERVER_SSL_CERT_FILE;
-    std::string pkey_path = home_path + NS_SERVER_SSL_KEY_FILE;
+    std::string cert_path = home_path + PQ_SERVER_SSL_CERT_FILE;
+    std::string pkey_path = home_path + PQ_SERVER_SSL_KEY_FILE;
 
     CapabilitySetter commCaps(CAP_SET);
     this->_communicator = std::unique_ptr<Communicator>(
@@ -287,6 +291,11 @@ void PQuarryServer::start_sniffer()
 
 bool PQuarryServer::callback(const Packet& packet)
 {
+    if (this->_stop_server)
+    {
+        return false;
+    }
+
     std::unique_ptr<PDU> pdu(packet.pdu()->clone());
     byte_array bytes = pdu->serialize();
 

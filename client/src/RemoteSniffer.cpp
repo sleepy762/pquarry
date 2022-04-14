@@ -12,8 +12,8 @@ using namespace Tins;
 
 #define INVALID_SUBSTR ("Invalid")
 
-#define NS_CLIENT_SSL_CERT_FILE ("/.nsClientCert.pem")
-#define NS_CLIENT_SSL_KEY_FILE ("/.nsClientKey.pem")
+#define PQ_CLIENT_SSL_CERT_FILE ("/.pqClientCert.pem")
+#define PQ_CLIENT_SSL_KEY_FILE ("/.pqClientKey.pem")
 
 std::function<void()> RemoteSniffer::_interrupt_function_wrapper;
 
@@ -60,8 +60,8 @@ void RemoteSniffer::connect()
     }
 
     std::string home_path = getenv("HOME");
-    std::string cert_path = home_path + NS_CLIENT_SSL_CERT_FILE;
-    std::string pkey_path = home_path + NS_CLIENT_SSL_KEY_FILE;
+    std::string cert_path = home_path + PQ_CLIENT_SSL_CERT_FILE;
+    std::string pkey_path = home_path + PQ_CLIENT_SSL_KEY_FILE;
 
     CapabilitySetter commCaps(CAP_SET);
     // The communicator is instantiated here instead of in the constructor in order to avoid
