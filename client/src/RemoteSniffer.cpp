@@ -1,20 +1,27 @@
 #include "RemoteSniffer.h"
-#include "callback.h"
+#include <tins/tins.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <iostream>
 #include "Deserializer.h"
 #include "CapabilitySetter.h"
 #include "SignalHandler.h"
+#include "PacketPrinter.h"
+
+using namespace Tins;
 
 #define INVALID_SUBSTR ("Invalid")
 
-int32_t RemoteSniffer::_server_sockfd = INVALID_SOCKET;
+#define PQ_CLIENT_SSL_CERT_FILE ("/.pqClientCert.pem")
+#define PQ_CLIENT_SSL_KEY_FILE ("/.pqClientKey.pem")
 
-RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
+std::function<void()> RemoteSniffer::_interrupt_function_wrapper;
+
+RemoteSniffer::RemoteSniffer(PacketContainer& packet_container, std::string ip, uint16_t port)
+    : _packet_container(packet_container)
 {
-    _server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (_server_sockfd == INVALID_SOCKET)
+    this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (this->_server_sockfd == INVALID_SOCKET)
     {
         throw std::runtime_error("Failed to create socket.");
     }
@@ -23,16 +30,11 @@ RemoteSniffer::RemoteSniffer(std::string ip, uint16_t port)
 
     this->_connect_succeeded = false;
     this->_sniffer_configured = false;
-    this->_communicator = nullptr;
 }
 
 RemoteSniffer::~RemoteSniffer()
 {
-    close(_server_sockfd);
-    if (this->_communicator != nullptr)
-    {
-        delete this->_communicator;
-    }
+    close(this->_server_sockfd);
 }
 
 void RemoteSniffer::start_sniffer()
@@ -52,19 +54,22 @@ void RemoteSniffer::connect()
     {
         throw std::runtime_error("Invalid address.");
     }
-    if (::connect(_server_sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
+    if (::connect(this->_server_sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
     {
         throw std::runtime_error("Connection failed.");
     }
 
     std::string home_path = getenv("HOME");
-    std::string cert_path = home_path + "/.clientCert.pem";
-    std::string pkey_path = home_path + "/.clientKey.pem";
+    std::string cert_path = home_path + PQ_CLIENT_SSL_CERT_FILE;
+    std::string pkey_path = home_path + PQ_CLIENT_SSL_KEY_FILE;
 
-    CapabilitySetter::set_required_caps();
-    this->_communicator = new Communicator(_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str());
-    CapabilitySetter::clear_required_caps();
-
+    CapabilitySetter commCaps(CAP_SET);
+    // The communicator is instantiated here instead of in the constructor in order to avoid
+    // potentially creating SSL files when the connection won't succeed
+    // It's just not needed early on
+    this->_communicator = std::unique_ptr<Communicator>(
+        new Communicator(this->_server_sockfd, TLS_client_method(), cert_path.c_str(), pkey_path.c_str())
+    );
     this->_connect_succeeded = true;
 }
 
@@ -86,7 +91,6 @@ void RemoteSniffer::configure_sniffer()
         std::cout << server_msg << '\n';
 
         // Check if the substring "Invalid" is in the server_msg
-        // ideally I should make a protocol for this server to client communication (later)
         if (server_msg.substr(0, server_msg.find(' ')) != INVALID_SUBSTR && response != "")
         {
             switch (interface_selected)
@@ -122,8 +126,9 @@ void RemoteSniffer::packet_receiver()
         throw std::runtime_error("RemoteSniffer::configure_sniffer() wasn't called.");
     }
 
-    // Close the socket and return to the main menu upon interrupt
-    SignalHandler::set_signal_handler(SIGINT, RemoteSniffer::remote_sniffer_interrupt, 0);
+    _interrupt_function_wrapper = [this]() { this->interrupt_function(); };
+    // Set a handler to close the socket and return to the main menu upon interrupt
+    SignalHandler sigintHandler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
     
     std::cout << '\n' << "Starting remote sniffer at " << this->_ip << ':' << this->_port << '\n';
     std::cout << "Interface: " << this->_remote_interface << '\n';
@@ -146,17 +151,17 @@ void RemoteSniffer::packet_receiver()
 
             EthernetII eth_pdu = EthernetII((const uint8_t*)single_packet_data.c_str(), single_packet_data.size());
             Packet packet = Packet(eth_pdu);
-            callback(packet);
+
+            PacketPrinter::print_packet(packet);
+            this->_packet_container.add_packet(packet);
         }
     }
 }
 
-void RemoteSniffer::remote_sniffer_interrupt(int)
+void RemoteSniffer::interrupt_function()
 {
     // Terminate the connection to return to the main menu
-    close(_server_sockfd);
-    // We want to disable the signal handler when we are not connected to the server
-    SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
+    close(this->_server_sockfd);
 }
 
 std::string RemoteSniffer::get_nonempty_line()

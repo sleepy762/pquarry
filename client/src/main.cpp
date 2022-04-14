@@ -1,9 +1,9 @@
 #include <unistd.h>
 #include <iostream>
-#include "NetscoutMenu.h"
+#include "PQuarryMenu.h"
 #include "CapabilitySetter.h"
 
-int main()
+int main(int argc, char** argv)
 {
     // Reduce root permissions
     if (geteuid() == 0)
@@ -19,8 +19,9 @@ int main()
         }
         setuid(getuid());
     }
-    
-    NetscoutMenu menu = NetscoutMenu();
+
+    PacketContainer packet_container;
+    PQuarryMenu menu = PQuarryMenu(packet_container, argc, argv);
     menu.menu_loop();
 
     return 0;

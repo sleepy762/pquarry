@@ -1,7 +1,14 @@
--- 30/1/2022
+-- 08/04/2022
+- SignalHandler and CapabilitySetter are now non-static objects which will reset the signal handler and capabilities in their destructors respectively.
+
+-- 05/04/2022
+- Moved includes to the source files.
+- Fixed memory leak with SSL_CTX.
+
+-- 30/01/2022
 - Removed the temporary workaround with CAP_DAC_OVERRIDE.
 
--- 25/1/2022
+-- 25/01/2022
 - Moved shared code files into a directory named 'common'.
 - Added a temporary capability to the CapabilitySetter (CAP_DAC_OVERRIDE).
 - The communicator class is now used as a non-static object.

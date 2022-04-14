@@ -4,6 +4,7 @@
 #include <vector>
 #include <limits>
 #include <iostream>
+#include "PacketContainer.h"
 
 // Enum of menu options
 typedef enum menu_entry_index
@@ -20,9 +21,10 @@ typedef enum menu_entry_index
 
 using interface_ip_pair = std::pair<std::string, std::string>;
 
-class NetscoutMenu
+class PQuarryMenu
 {
 private:
+    PacketContainer& _packet_container;
     std::string _local_interface;
     std::string _local_filters;
 
@@ -43,7 +45,7 @@ private:
 
     void export_packets() const;
 
-    void clear_saved_packets();
+    void clear_saved_packets() const;
 
     void see_information() const;
 
@@ -53,8 +55,9 @@ private:
     void start_remote_sniffer() const;
 
 public:
-    NetscoutMenu();
-    ~NetscoutMenu();
+    PQuarryMenu(PacketContainer& packet_container);
+    PQuarryMenu(PacketContainer& packet_container, int argc, char** argv);
+    ~PQuarryMenu();
 
     template <typename T>
     static T get_value();
@@ -67,7 +70,7 @@ public:
 
 // Will not return until a value is given (of the given type)
 template <typename T>
-T NetscoutMenu::get_value()
+T PQuarryMenu::get_value()
 {
     T input;
     bool fail;
@@ -81,7 +84,7 @@ T NetscoutMenu::get_value()
         {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            NetscoutMenu::print_error_msg("Invalid input.");
+            PQuarryMenu::print_error_msg("Invalid input.");
         }
     } while(fail);
     return input;

@@ -1,12 +1,11 @@
 #include "LocalSniffer.h"
-#include "callback.h"
 #include <iostream>
 #include "SignalHandler.h"
 #include "CapabilitySetter.h"
+#include "PacketPrinter.h"
 
-Sniffer* LocalSniffer::_sniffer = nullptr;
-
-LocalSniffer::LocalSniffer(std::string interface, std::string filters)
+LocalSniffer::LocalSniffer(PacketContainer& packet_container, std::string interface, std::string filters)
+    : _packet_container(packet_container)
 {
     this->_interface = interface;
     this->_filters = filters;
@@ -14,13 +13,12 @@ LocalSniffer::LocalSniffer(std::string interface, std::string filters)
 
 LocalSniffer::~LocalSniffer()  {}
 
-// Stops the sniffer when Ctrl-C is pressed
-void LocalSniffer::sniffer_interrupt(int)
-{
-    _sniffer->stop_sniff();
 
-    delete _sniffer;
-    _sniffer = nullptr;
+std::function<void()> LocalSniffer::_interrupt_function_wrapper;
+
+void LocalSniffer::interrupt_function()
+{
+    this->_sniffer->stop_sniff();
 }
 
 void LocalSniffer::start_sniffer()
@@ -36,20 +34,21 @@ void LocalSniffer::start_sniffer()
     // Instantiate the config to add our pcap filters
     SnifferConfiguration config;
     config.set_filter(this->_filters);
-    config.set_immediate_mode(true);
+    config.set_immediate_mode(true); // Show packets immediately instead of in waves
 
-    CapabilitySetter::set_required_caps();
-    // The sniffer is allocated on the heap because we want to access the object in a separate function
-    // see LocalSniffer::sniffer_interrupt
-    _sniffer = new Sniffer(this->_interface, config);
+    // Set the wrapper interrupt function which will be called inside the interrupt handler    
+    _interrupt_function_wrapper = [this]() { this->interrupt_function(); };
 
     // We want the signal handler to work only while sniffing
-    SignalHandler::set_signal_handler(SIGINT, LocalSniffer::sniffer_interrupt, 0);
+    SignalHandler sigintHandler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
+    CapabilitySetter snifferCaps(CAP_SET);
 
+    this->_sniffer = std::unique_ptr<Sniffer>(new Sniffer(this->_interface, config));
     // Starts the sniffer
-    _sniffer->sniff_loop(callback);
-    
-    // We want to disable the signal handler when we are not sniffing
-    SignalHandler::set_signal_handler(SIGINT, SIG_DFL, 0);
-    CapabilitySetter::clear_required_caps();
+    this->_sniffer->sniff_loop([this](const Packet& packet)
+    {
+        PacketPrinter::print_packet(packet);
+        this->_packet_container.add_packet(packet);
+        return true;
+    });
 }

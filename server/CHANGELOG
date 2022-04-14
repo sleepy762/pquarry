@@ -1,18 +1,22 @@
-Version 1.2.1 -- 30/1/2022
+Version 1.2.2 -- 05/04/2022
+- Changed the name of the certificate and private key files.
+- Added a proper way to close the server.
+
+Version 1.2.1 -- 30/01/2022
 - SSL certificates and private keys are created in the home directory.
 - The executable has the setuid bit set.
 
-Version 1.2.0 -- 25/1/2022
+Version 1.2.0 -- 25/01/2022
 - New dependency: openssl.
 - The server communicates with the client using OpenSSL. The communication is encrypted with the latest TLS protocol. Old server versions are incompatible with the client version 1.4.0+.
 
-Version 1.1.0 -- 19/1/2022
+Version 1.1.0 -- 19/01/2022
 - New dependency: libcap.
 - Root permissions are reduced during initialization, and when the sniffer is not active. The program only sets the CAP_NET_RAW permission when it's required. 
 - Fixed oversight where connecting multiple times to the server made it keep adding interfaces to the interface list.
 
-Version 1.0.1 -- 18/1/2022
+Version 1.0.1 -- 18/01/2022
 - The list of available interfaces is updated every time a client connects to the server, instead of every time the server is started.
 
-Version 1.0.0 -- 8/1/2022
+Version 1.0.0 -- 08/01/2022
 - Initial release

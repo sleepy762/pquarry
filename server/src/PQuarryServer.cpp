@@ -1,9 +1,23 @@
-#include "NetscoutServer.h"
+#include "PQuarryServer.h"
+#include <sys/socket.h>
+#include <stdexcept>
+#include <unistd.h>
+#include <iostream>
+#include <vector>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include "Serializer.h"
+#include "CapabilitySetter.h"
+#include "SignalHandler.h"
 
-int32_t NetscoutServer::_client_sockfd = INVALID_SOCKET;
-Communicator* NetscoutServer::_communicator = nullptr;
+#define NO_FILTERS_STR ("no")
 
-NetscoutServer::NetscoutServer(uint16_t port)
+#define PQ_SERVER_SSL_CERT_FILE ("/.pqServerCert.pem") 
+#define PQ_SERVER_SSL_KEY_FILE ("/.pqServerKey.pem")
+
+std::function<void()> PQuarryServer::_interrupt_function_wrapper;
+
+PQuarryServer::PQuarryServer(uint16_t port)
 {
     this->_server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->_server_sockfd == INVALID_SOCKET)
@@ -12,18 +26,20 @@ NetscoutServer::NetscoutServer(uint16_t port)
     }
 
     this->_port = port;
+    this->_stop_server = false;
 }
 
-NetscoutServer::~NetscoutServer()
+PQuarryServer::~PQuarryServer()
 {
-    if (_client_sockfd != INVALID_SOCKET)
+    if (this->_client_sockfd != INVALID_SOCKET)
     {
-        close(_client_sockfd);
+        close(this->_client_sockfd);
     }
     close(this->_server_sockfd);
 }
 
-void NetscoutServer::update_interface_list()
+// The interfaces are stored in a class member because multiple methods need to access it
+void PQuarryServer::update_interface_list()
 {
     this->_avail_interfaces.clear();
 
@@ -54,7 +70,7 @@ void NetscoutServer::update_interface_list()
     }
 }
 
-void NetscoutServer::start()
+void PQuarryServer::start()
 {
     struct sockaddr_in sock_addr;
     sock_addr.sin_family = AF_INET;
@@ -71,17 +87,19 @@ void NetscoutServer::start()
     }
 
     // If the client disconnects from the SSL socket, the server will terminate because of a broken pipe
-    SignalHandler::set_signal_handler(SIGPIPE, SIG_IGN, 0);
+    SignalHandler sigpipeHandler(SIGPIPE, SIG_IGN, 0);
+    
+    _interrupt_function_wrapper = [this]() { this->interrupt_function(); };
+    SignalHandler sigintHandler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
 
+    std::cout << "Press Ctrl+C to stop the server." << '\n';
     std::cout << "Listening on port " << this->_port << '\n';
     // Accept connections until server is closed
     while (true)
     {
-        // If an exception occurs then the communicator won't be freed in the accept method
-        if (_communicator != nullptr)
+        if (this->_stop_server)
         {
-            delete _communicator;
-            _communicator = nullptr;
+            break;
         }
 
         try
@@ -90,18 +108,21 @@ void NetscoutServer::start()
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            if (!this->_stop_server)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
     }
 }
 
-void NetscoutServer::accept()
+void PQuarryServer::accept()
 {
     struct sockaddr_in client_addr;
     socklen_t client_addrlen = sizeof(client_addr);
 
-    _client_sockfd = ::accept(this->_server_sockfd, (struct sockaddr*)&client_addr, &client_addrlen);
-    if (_client_sockfd == INVALID_SOCKET)
+    this->_client_sockfd = ::accept(this->_server_sockfd, (struct sockaddr*)&client_addr, &client_addrlen);
+    if (this->_client_sockfd == INVALID_SOCKET)
     {
         throw std::runtime_error("Accepted invalid socket.");
     }
@@ -112,24 +133,23 @@ void NetscoutServer::accept()
     uint16_t client_port = ntohs(client_addr.sin_port);
 
     std::string home_path = getenv("HOME");
-    std::string cert_path = home_path + "/.serverCert.pem";
-    std::string pkey_path = home_path + "/.serverKey.pem";
+    std::string cert_path = home_path + PQ_SERVER_SSL_CERT_FILE;
+    std::string pkey_path = home_path + PQ_SERVER_SSL_KEY_FILE;
 
-    CapabilitySetter::set_required_caps();
-    _communicator = new Communicator(_client_sockfd, TLS_server_method(), cert_path.c_str(), pkey_path.c_str());
-    CapabilitySetter::clear_required_caps();
+    CapabilitySetter commCaps(CAP_SET);
+    this->_communicator = std::unique_ptr<Communicator>(
+        new Communicator(this->_client_sockfd, TLS_server_method(), cert_path.c_str(), pkey_path.c_str())
+    );
+    commCaps.set_required_caps(CAP_CLEAR);
 
     std::cout << "Client connected at " << client_ip_address << ":" << client_port << '\n';
 
     this->update_interface_list();
     this->configure_sniffer_with_client();
     this->start_sniffer();
-
-    delete _communicator;
-    _communicator = nullptr;
 }
 
-void NetscoutServer::configure_sniffer_with_client()
+void PQuarryServer::configure_sniffer_with_client()
 {
     // Get the necessary info from the client 
     this->_chosen_interface = this->get_interface_from_client();
@@ -143,36 +163,36 @@ void NetscoutServer::configure_sniffer_with_client()
     }
     this->_chosen_filters += "not port " + std::to_string(this->_port);
 
-    _communicator->send("Configuration complete!");
+    this->_communicator->send("Configuration complete!");
 }
 
-std::string NetscoutServer::get_interface_from_client() const
+std::string PQuarryServer::get_interface_from_client() const
 {
     bool valid;
     std::string interface;
     std::string fmt_msg = this->get_formatted_interfaces_msg();
 
     // Send the initial message
-    _communicator->send(fmt_msg);
+    this->_communicator->send(fmt_msg);
     do
     {
-        interface = _communicator->recv();
+        interface = this->_communicator->recv();
         valid = this->is_interface_valid(interface);
 
         if (!valid)
         {
-            _communicator->send("Invalid interface.");
+            this->_communicator->send("Invalid interface.");
         }
     } while (!valid);
     
     return interface;
 }
 
-std::string NetscoutServer::get_formatted_interfaces_msg() const
+std::string PQuarryServer::get_formatted_interfaces_msg() const
 {
     std::string msg;
 
-    msg += "Please choose an interface to analyze:\n";
+    msg += "Please choose an interface to capture packets from:\n";
     for (auto it = _avail_interfaces.cbegin(); it != _avail_interfaces.cend(); it++)
     {
         msg += it->first;
@@ -188,7 +208,7 @@ std::string NetscoutServer::get_formatted_interfaces_msg() const
     return msg;
 }
 
-bool NetscoutServer::is_interface_valid(const std::string& interface) const
+bool PQuarryServer::is_interface_valid(const std::string& interface) const
 {
     for (auto it = _avail_interfaces.cbegin(); it != _avail_interfaces.cend(); it++)
     {
@@ -201,34 +221,34 @@ bool NetscoutServer::is_interface_valid(const std::string& interface) const
     return false;
 }
 
-std::string NetscoutServer::get_filters_from_client() const
+std::string PQuarryServer::get_filters_from_client() const
 {
     bool valid;
     std::string filters = "";
-    std::string fmt_msg = "Enter pcap filters (write 'no' for no filters)";
+    std::string fmt_msg = "Enter pcap filters (write 'no' for no filters):";
 
-    _communicator->send(fmt_msg);
+    this->_communicator->send(fmt_msg);
     do
     {
         std::string filter_error = "";
 
-        filters = _communicator->recv();
+        filters = this->_communicator->recv();
 
-        CapabilitySetter::set_required_caps();
+        CapabilitySetter filterCaps(CAP_SET);
         valid = this->are_filters_valid(filters, filter_error);
-        CapabilitySetter::clear_required_caps();
+        filterCaps.set_required_caps(CAP_CLEAR);
 
         if (!valid)
         {
             std::string msg = "Invalid filters: " + filter_error;
-            _communicator->send(msg);
+            this->_communicator->send(msg);
         }
     } while (!valid);
     
     return filters;
 }
 
-bool NetscoutServer::are_filters_valid(std::string& filters, std::string& error_out) const
+bool PQuarryServer::are_filters_valid(std::string& filters, std::string& error_out) const
 {
     // It's impossible to send an empty string and recv it, so we must use some special string
     // It's also important to clear the special string from the filters because it's not valid
@@ -253,30 +273,36 @@ bool NetscoutServer::are_filters_valid(std::string& filters, std::string& error_
     return true;
 }
 
-void NetscoutServer::start_sniffer()
+void PQuarryServer::start_sniffer()
 {
     SnifferConfiguration config;
     config.set_filter(this->_chosen_filters);
     config.set_immediate_mode(true);
 
-    CapabilitySetter::set_required_caps();
+    CapabilitySetter snifferCaps(CAP_SET);
 
     Sniffer sniffer = Sniffer(this->_chosen_interface, config);
     sniffer.set_extract_raw_pdus(true); // Don't interpret packets
-    sniffer.sniff_loop(callback);
-    
-    CapabilitySetter::clear_required_caps();
+    sniffer.sniff_loop([this](const Packet& packet) -> bool
+    {
+        return this->callback(packet);
+    });
 }
 
-bool NetscoutServer::callback(const Packet& packet)
+bool PQuarryServer::callback(const Packet& packet)
 {
+    if (this->_stop_server)
+    {
+        return false;
+    }
+
     std::unique_ptr<PDU> pdu(packet.pdu()->clone());
     byte_array bytes = pdu->serialize();
 
     std::string bytes_string = Serializer::serialize_data(bytes);
     try
     {
-        _communicator->send(bytes_string);
+        this->_communicator->send(bytes_string);
     }
     catch(const std::exception& e)
     {
@@ -285,4 +311,9 @@ bool NetscoutServer::callback(const Packet& packet)
     }
 
     return true;
+}
+
+void PQuarryServer::interrupt_function()
+{
+    this->_stop_server = true;
 }

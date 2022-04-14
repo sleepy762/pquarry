@@ -1,13 +1,15 @@
-# NetScout
+# PacketQuarry
 
 A simple network analyzer.
 
-## Building
+## Dependencies
 
 - Arch Dependencies (pacman): `cmake` `make` `gcc` `libcap` `openssl`
 - Debian Dependencies (apt): `cmake` `make` `gcc` `libcap-dev` `libssl-dev`
 - Gentoo Dependencies (emerge): `dev-util/cmake` `sys-devel/make` `sys-devel/gcc` `sys-libs/libcap` `dev-libs/openssl`
 - [libtins](https://github.com/mfontanini/libtins) is another dependency which has to be built and installed (including its own dependencies). **Make sure to enable C++11 support when compiling libtins.**
+
+## Building and Installing
 
 Run the following commands in a terminal in the root directory of the project:
 ```
@@ -17,8 +19,8 @@ cmake ..
 make
 sudo make install
 ```
-Two executables will be created, `NetScout`(client) and `NetScoutServer`(server).
+Two executables will be created, `pquarry`(client) and `pquarryserver`(server).
 
 A readme file that explains the usage of each executable is available in the respective directory.
 
-To uninstall, simply run `sudo make uninstall`.
+To uninstall, run `sudo make uninstall`.

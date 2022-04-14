@@ -1,34 +1,23 @@
 #pragma once
 #include <tins/tins.h>
 #include <string>
-#include <sys/socket.h>
-#include <stdexcept>
-#include <unistd.h>
-#include <iostream>
-#include <vector>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <memory>
 #include "Communicator.h"
-#include "Serializer.h"
-#include "CapabilitySetter.h"
-#include "SignalHandler.h"
+#include <memory>
+#include <functional>
 
 using namespace Tins;
 
 using interface_ip_pair = std::pair<std::string, std::string>;
 
-#define NO_FILTERS_STR ("no")
-
-class NetscoutServer
+class PQuarryServer
 {
 private:
-    static Communicator* _communicator;
+    std::unique_ptr<Communicator> _communicator;
     
     // Server related members
     uint16_t _port;
     int32_t _server_sockfd;
-    static int32_t _client_sockfd; // Must be static so the callback can access it too
+    int32_t _client_sockfd;
 
     // Stores the interfaces which are available on the machine which is running the server
     std::vector<interface_ip_pair> _avail_interfaces;
@@ -50,11 +39,16 @@ private:
 
     void start_sniffer();
 
-    static bool callback(const Packet& packet);
+    bool callback(const Packet& packet);
+
+    static std::function<void()> _interrupt_function_wrapper;
+    void interrupt_function();
+    bool _stop_server;
 
 public:
-    NetscoutServer(uint16_t port);
-    ~NetscoutServer();
+    PQuarryServer(const PQuarryServer&) = delete;
+    PQuarryServer(uint16_t port);
+    ~PQuarryServer();
     
     void start();
 };

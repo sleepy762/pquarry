@@ -1,4 +1,4 @@
-#include "NetscoutServer.h"
+#include "PQuarryServer.h"
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -24,14 +24,14 @@ int main(int argc, char** argv)
         catch (const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            exit(1);
+            return 1;
         }
         setuid(getuid());
     }
     else
     {
         std::cerr << "The server must be run with the setuid file permission." << '\n';
-        exit(1);
+        return 1;
     }
 
     // Converting string to integer to get the port
@@ -40,10 +40,10 @@ int main(int argc, char** argv)
     uint16_t port;
     strVal >> port;
 
-    std::cout << "Starting NetScout Server Version " << SERVER_VERSION << '\n';
+    std::cout << "Starting PQuarry Server Version " << SERVER_VERSION << '\n';
     try
     {
-        NetscoutServer server = NetscoutServer(port);
+        PQuarryServer server(port);
         server.start();
     }
     catch(const std::exception& e)

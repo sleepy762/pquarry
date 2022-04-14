@@ -1,18 +1,20 @@
 #pragma once
-#include <tins/tins.h>
 #include "Communicator.h"
 #include <string>
-
-using namespace Tins;
+#include <memory>
+#include <functional>
+#include "PacketContainer.h"
 
 class RemoteSniffer
 {
 private:
-    Communicator* _communicator;
+    PacketContainer& _packet_container;
+    std::unique_ptr<Communicator> _communicator;
+
     // Server related members
     std::string _ip;
     uint16_t _port;
-    static int32_t _server_sockfd; // Must be static so the signal handler can access it
+    int32_t _server_sockfd;
 
     // Status members
     bool _connect_succeeded;
@@ -23,10 +25,11 @@ private:
     std::string _remote_filters;
 
     // Like std::getline but the input *must* have more than 0 characters
-    // This function is specific for this class
+    // This function is specific to this class
     static std::string get_nonempty_line();
 
-    static void remote_sniffer_interrupt(int);
+    static std::function<void()> _interrupt_function_wrapper;
+    void interrupt_function();
 
     void connect();
     void configure_sniffer();
@@ -34,7 +37,8 @@ private:
     void start();
 
 public:
-    RemoteSniffer(std::string ip, uint16_t port);
+    RemoteSniffer(PacketContainer& packet_container, std::string ip, uint16_t port);
+    RemoteSniffer(const RemoteSniffer&) = delete;
     ~RemoteSniffer();
 
     void start_sniffer();
