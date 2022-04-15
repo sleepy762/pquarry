@@ -6,6 +6,7 @@
 #include <vector>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <thread>
 #include "Serializer.h"
 #include "CapabilitySetter.h"
 #include "SignalHandler.h"
@@ -15,7 +16,8 @@
 #define PQ_SERVER_SSL_CERT_FILE ("/.pqServerCert.pem") 
 #define PQ_SERVER_SSL_KEY_FILE ("/.pqServerKey.pem")
 
-std::function<void()> PQuarryServer::_interrupt_function_wrapper;
+std::function<void()> PQuarryServer::_sigint_handler_function_wrapper;
+std::function<void()> PQuarryServer::_sigpipe_handler_function_wrapper;
 
 PQuarryServer::PQuarryServer(uint16_t port)
 {
@@ -87,10 +89,11 @@ void PQuarryServer::start()
     }
 
     // If the client disconnects from the SSL socket, the server will terminate because of a broken pipe
-    SignalHandler sigpipeHandler(SIGPIPE, SIG_IGN, 0);
+    _sigpipe_handler_function_wrapper = [this]() { this->sigpipe_handler(); };
+    SignalHandler sigpipeHandler(SIGPIPE, [](int){_sigpipe_handler_function_wrapper();}, 0);
     
-    _interrupt_function_wrapper = [this]() { this->interrupt_function(); };
-    SignalHandler sigintHandler(SIGINT, [](int){_interrupt_function_wrapper();}, 0);
+    _sigint_handler_function_wrapper = [this]() { this->sigint_handler(); };
+    SignalHandler sigintHandler(SIGINT, [](int){_sigint_handler_function_wrapper();}, 0);
 
     std::cout << "Press Ctrl+C to stop the server." << '\n';
     std::cout << "Listening on port " << this->_port << '\n';
@@ -281,12 +284,31 @@ void PQuarryServer::start_sniffer()
 
     CapabilitySetter snifferCaps(CAP_SET);
 
-    Sniffer sniffer = Sniffer(this->_chosen_interface, config);
-    sniffer.set_extract_raw_pdus(true); // Don't interpret packets
-    sniffer.sniff_loop([this](const Packet& packet) -> bool
+    this->_sniffer = std::unique_ptr<Sniffer>(new Sniffer(this->_chosen_interface, config));
+    this->_sniffer->set_extract_raw_pdus(true); // Don't interpret packets
+
+    // This thread blocks at recv(). We do this in order to know if the client is still connected
+    // If the client disconnected, recv will throw an exception and we will raise a signal to
+    // stop the sniffer. The server will return to the listening state immediately.
+    std::thread th([this](){
+        try
+        {
+            this->_communicator->recv();
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << "Client disconnected.\n";
+            raise(SIGPIPE);
+        }
+    });
+    // This thread will always return
+    th.detach();
+
+    this->_sniffer->sniff_loop([this](const Packet& packet) -> bool
     {
         return this->callback(packet);
     });
+    this->_sniffer.reset();
 }
 
 bool PQuarryServer::callback(const Packet& packet)
@@ -313,7 +335,15 @@ bool PQuarryServer::callback(const Packet& packet)
     return true;
 }
 
-void PQuarryServer::interrupt_function()
+void PQuarryServer::sigint_handler()
 {
     this->_stop_server = true;
+}
+
+void PQuarryServer::sigpipe_handler()
+{
+    if (this->_sniffer != nullptr)
+    {
+        this->_sniffer->stop_sniff();
+    }
 }

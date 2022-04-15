@@ -13,6 +13,7 @@ class PQuarryServer
 {
 private:
     std::unique_ptr<Communicator> _communicator;
+    std::unique_ptr<Sniffer> _sniffer;
     
     // Server related members
     uint16_t _port;
@@ -41,8 +42,12 @@ private:
 
     bool callback(const Packet& packet);
 
-    static std::function<void()> _interrupt_function_wrapper;
-    void interrupt_function();
+    static std::function<void()> _sigint_handler_function_wrapper;
+    void sigint_handler();
+
+    static std::function<void()> _sigpipe_handler_function_wrapper;
+    void sigpipe_handler();
+
     bool _stop_server;
 
 public:
