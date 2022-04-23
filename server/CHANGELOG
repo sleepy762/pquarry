@@ -1,3 +1,6 @@
+Version 1.2.3 -- 23/04/2022
+- The server immediately knows when the client disconnects now.
+
 Version 1.2.2 -- 05/04/2022
 - Changed the name of the certificate and private key files.
 - Added a proper way to close the server.
